@@ -1,0 +1,36 @@
+@font-face {
+	src: url("fonts/Ubuntu-R.ttf");
+}
+
+@font-face {
+	src: url("fonts/ITC_Franklin_Gothic-Medium.otf");
+}
+
+#title {
+	-fx-font: 30pt "Ubuntu";
+	-fx-fill: #003C71;
+}
+
+#subtitle {
+	-fx-font: 12pt "ITC Franklin Gothic Med";
+}
+
+#menu-button {
+	-fx-font: 12pt "ITC Franklin Gothic Med";
+	-fx-text-fill: #ffffff;
+	-fx-background-radius: 0;
+	-fx-background-insets: 0, 3, 0, 3;
+	-fx-background-color: #0077CA;
+	-fx-padding: 10, 0, 10, 0;
+	-fx-border-width: 2px;
+	-fx-border-color: #ffffff;
+}
+
+#menu-button:hover {
+	-fx-text-fill: #D8DFE6;
+	-fx-background-color: #003C71;
+}
+
+.root {
+	-fx-background: #ffffff;
+}

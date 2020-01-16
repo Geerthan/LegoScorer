@@ -1,0 +1,16 @@
+# Ignore class files and bin resources
+bin
+
+# Ignore classpath file
+*.classpath
+
+# Ignore misc files
+.gitattributes
+.project
+.settings
+
+# Ignore Gradle generics
+.gradle
+build
+gradlew
+gradlew.bat
