@@ -1,5 +1,7 @@
 package LegoScorer;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 /**
  * This class handles the creation of the main menu scene.
@@ -17,7 +20,13 @@ import javafx.scene.text.Text;
 
 public class MainMenu {
 	
-	public static Scene getScene() {
+	Stage primaryStage;
+	
+	public MainMenu(Stage primaryStage) {
+		this.primaryStage = primaryStage;
+	}
+	
+	public Scene getScene() {
 		
 		VBox root = new VBox(); //Main container of scene
 		root.alignmentProperty().set(Pos.CENTER);
@@ -46,6 +55,12 @@ public class MainMenu {
 		createTournament.setId("menu-button");
 		importTournament.setId("menu-button");
 		createGame.setId("menu-button");
+		
+		createTournament.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				primaryStage.setScene(Main.createTournamentMenu.getScene());
+			}
+		});
 		
 		buttonRow.getChildren().addAll(createTournament, importTournament, createGame);
 		

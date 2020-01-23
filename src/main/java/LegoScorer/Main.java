@@ -13,11 +13,17 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
+	public static MainMenu mainMenu;
+	public static CreateTournamentMenu createTournamentMenu;
+	
 	public void start(Stage primaryStage) throws Exception {
+		
+		mainMenu = new MainMenu(primaryStage);
+		createTournamentMenu = new CreateTournamentMenu(primaryStage);
 		
 		primaryStage.setTitle("LegoScorer");
 		primaryStage.setResizable(false);
-		primaryStage.setScene(MainMenu.getScene());
+		primaryStage.setScene(mainMenu.getScene());
 		primaryStage.show();
 		
 	}
