@@ -62,6 +62,12 @@ public class MainMenu {
 			}
 		});
 		
+		createGame.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				primaryStage.setScene(Main.createGameMenu.getScene());
+			}
+		});
+		
 		buttonRow.getChildren().addAll(createTournament, importTournament, createGame);
 		
 		root.getChildren().add(buttonRow);

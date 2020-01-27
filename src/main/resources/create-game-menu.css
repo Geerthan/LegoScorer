@@ -2,6 +2,19 @@
 	src: url("fonts/ITC_Franklin_Gothic-Medium.otf");
 }
 
+.label {
+	-fx-font: 11pt "ITC Franklin Gothic Med";
+}
+
+.spinner {
+	-fx-pref-width: 100px;
+}
+
+.text-field {
+	-fx-background-radius: 0;
+	-fx-font: 11pt "ITC Franklin Gothic Med";
+}
+
 .button {
 	-fx-font: 12pt "ITC Franklin Gothic Med";
 	-fx-text-fill: #FFFFFF;
@@ -9,7 +22,7 @@
 	-fx-background-insets: 0, 3, 0, 3;
 	-fx-background-color: #0077CA;
 	-fx-padding: 10, 0, 10, 0;
-	-fx-pref-width: 175px;
+	-fx-pref-width: 250px;
 	-fx-border-width: 2px;
 	-fx-border-color: #FFFFFF;
 }
@@ -23,8 +36,8 @@
 	-fx-background-color: #E75D2A;
 }
 
-#popup-combobox {
-	
+#exit-button:hover {
+	-fx-background-color: #D12721;
 }
 
 #exit-popup-button {
@@ -32,10 +45,6 @@
 	-fx-font-size: 9pt;
 	-fx-pref-width: 50px;
 	-fx-background-color: #E75D2A;
-}
-
-#exit-button:hover {
-	-fx-background-color: #D12721;
 }
 
 .root {
