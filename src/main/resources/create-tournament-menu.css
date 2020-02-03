@@ -23,6 +23,10 @@
 	-fx-font: 12pt "ITC Franklin Gothic Med";
 }
 
+#disabled-button {
+	-fx-background-color: #A7A8AA;
+}
+
 #completed-button {
 	-fx-background-color: #4A8755;
 }
@@ -41,7 +45,7 @@
 	-fx-pref-width: -1;
 }
 
-#cancel-popup-button {
+#exit-popup-button {
 	-fx-padding: 5, 55, 5, 55;
 	-fx-font-size: 9pt;
 	-fx-pref-width: -1;

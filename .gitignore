@@ -15,5 +15,6 @@ build
 gradlew
 gradlew.bat
 
-# Ignore game .dat files
-*.dat
+# Ignore game and tournament data files
+*.gdat
+*.tdat

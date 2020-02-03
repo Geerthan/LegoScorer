@@ -226,7 +226,7 @@ public class CreateGameMenu {
 					repeatScorePtVals[i] = getFieldPtVal(scoreBox);
 				}
 				
-				String errorStr = Database.saveGameType(gameName, teamAmt, 
+				String errorStr = Database.createGameType(gameName, teamAmt, 
 						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals);
 				
 				if(errorStr != "") {
