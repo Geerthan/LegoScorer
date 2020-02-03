@@ -19,23 +19,33 @@
 	-fx-background-color: #003C71;
 }
 
+#dialog-title-text {
+	-fx-font: 12pt "ITC Franklin Gothic Med";
+}
+
+#completed-button {
+	-fx-background-color: #4A8755;
+}
+
 #exit-button {
-	-fx-background-color: #E75D2A;
-}
-
-#popup-combobox {
-	
-}
-
-#exit-popup-button {
-	-fx-padding: 3;
-	-fx-font-size: 9pt;
-	-fx-pref-width: 50px;
 	-fx-background-color: #E75D2A;
 }
 
 #exit-button:hover {
 	-fx-background-color: #D12721;
+}
+
+#popup-button {
+	-fx-padding: 5, 55, 5, 55;
+	-fx-font-size: 9pt;
+	-fx-pref-width: -1;
+}
+
+#cancel-popup-button {
+	-fx-padding: 5, 55, 5, 55;
+	-fx-font-size: 9pt;
+	-fx-pref-width: -1;
+	-fx-background-color: #E75D2A;
 }
 
 .root {

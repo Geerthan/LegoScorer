@@ -14,3 +14,6 @@ bin
 build
 gradlew
 gradlew.bat
+
+# Ignore game .dat files
+*.dat

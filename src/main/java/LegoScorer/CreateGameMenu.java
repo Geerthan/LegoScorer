@@ -25,15 +25,7 @@ import javafx.stage.Stage;
 
 public class CreateGameMenu {
 	
-	Stage primaryStage;
-	Stage errorPopup;
-	
-	//Move to database i/o file
-	static String[] gameNames = {"Battle Royale", "Treeside Tumble", "Double Devastator"};
-
-	public static String[] getGameNames() {
-		return gameNames;
-	}
+	Stage primaryStage, popupStage;
 	
 	public CreateGameMenu(Stage primaryStage) {
 		this.primaryStage = primaryStage;
@@ -213,6 +205,37 @@ public class CreateGameMenu {
 					return;
 				}
 				
+				String gameName = nameTextField.getText();
+				int teamAmt = teamAmtSpinner.getValue();
+				
+				String[] uniqueScoreStrs = new String[uniqueScoreBox.getChildren().size()];
+				double[] uniqueScorePtVals = new double[uniqueScoreBox.getChildren().size()];
+				
+				for(int i = 0;i < uniqueScoreBox.getChildren().size();i++) {
+					VBox scoreBox = (VBox) uniqueScoreBox.getChildren().get(i);
+					uniqueScoreStrs[i] = getFieldName(scoreBox);
+					uniqueScorePtVals[i] = getFieldPtVal(scoreBox);
+				}
+				
+				String[] repeatScoreStrs = new String[repeatScoreBox.getChildren().size()];
+				double[] repeatScorePtVals = new double[repeatScoreBox.getChildren().size()];
+				
+				for(int i = 0;i < repeatScoreBox.getChildren().size();i++) {
+					VBox scoreBox = (VBox) repeatScoreBox.getChildren().get(i);
+					repeatScoreStrs[i] = getFieldName(scoreBox);
+					repeatScorePtVals[i] = getFieldPtVal(scoreBox);
+				}
+				
+				String errorStr = Database.saveGameType(gameName, teamAmt, 
+						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals);
+				
+				if(errorStr != "") {
+					showErrorDialog(errorStr);
+					return;
+				}
+				
+				showSaveDialog(gameName);
+				
 			}
 		});
 		
@@ -240,20 +263,22 @@ public class CreateGameMenu {
 	public String checkForInputErrors(TextField nameTextField, VBox uniqueScoreBox, VBox repeatScoreBox) {
 		if(nameTextField.getText().isEmpty())
 			return "The game requires a name (ex. Battle Royale).";
-		else {
-			for(int i = 0;i < uniqueScoreBox.getChildren().size();i++) {
-				VBox scoreBox = (VBox) uniqueScoreBox.getChildren().get(i);
-				
-				if(getFieldName(scoreBox).isEmpty())
-					return "All scoring fields require a valid name.";
-			}
-			for(int i = 0;i < repeatScoreBox.getChildren().size();i++) {
-				VBox scoreBox = (VBox) repeatScoreBox.getChildren().get(i);
-				
-				if(getFieldName(scoreBox).isEmpty())
-					return "All scoring fields require a valid name.";
-			}
+		
+		else if(uniqueScoreBox.getChildren().size() == 0 && repeatScoreBox.getChildren().size() == 0)
+			return "The game requires at least one scoring field.";
+						
+		for(int i = 0;i < uniqueScoreBox.getChildren().size();i++) {
+			VBox scoreBox = (VBox) uniqueScoreBox.getChildren().get(i);
+			if(getFieldName(scoreBox).isEmpty())
+				return "All scoring fields require a valid name.";
 		}
+			
+		for(int i = 0;i < repeatScoreBox.getChildren().size();i++) {
+			VBox scoreBox = (VBox) repeatScoreBox.getChildren().get(i);
+			if(getFieldName(scoreBox).isEmpty())
+				return "All scoring fields require a valid name.";
+		}
+		
 		return "";
 	}
 	
@@ -261,6 +286,12 @@ public class CreateGameMenu {
 		HBox nameBox = (HBox) scoreBox.getChildren().get(0);
 		TextField txtfd = (TextField) nameBox.getChildren().get(1);
 		return txtfd.getText();
+	}
+	
+	public double getFieldPtVal(VBox scoreBox) {
+		HBox ptBox = (HBox) scoreBox.getChildren().get(1);
+		Spinner<Double> ptSpinner = (Spinner<Double>) ptBox.getChildren().get(1);
+		return ptSpinner.getValue();
 	}
 	
 	public void showErrorDialog(String errorStr) {
@@ -277,7 +308,7 @@ public class CreateGameMenu {
 		
 		exitButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				errorPopup.hide();
+				popupStage.hide();
 			}
 		});
 		
@@ -285,10 +316,41 @@ public class CreateGameMenu {
 		
 		Scene s = new Scene(root);
 		s.getStylesheets().add("create-game-menu.css");
-		errorPopup = new Stage();
-		errorPopup.setScene(s);
-		errorPopup.initModality(Modality.WINDOW_MODAL);
-		errorPopup.show();
+		popupStage = new Stage();
+		popupStage.setScene(s);
+		popupStage.initOwner(primaryStage);
+		popupStage.initModality(Modality.WINDOW_MODAL);
+		popupStage.show();
+	}
+	
+	public void showSaveDialog(String gameName) {
+		VBox root = new VBox();
+		root.setPadding(new Insets(15));
+		root.setAlignment(Pos.CENTER);
+		
+		Text exitText = new Text("Game \"" + gameName + "\" successfully saved as file \"" + gameName + ".dat\".");
+		VBox.setMargin(exitText, new Insets(0, 0, 5, 0));
+		root.getChildren().add(exitText);
+		
+		Button exitButton = new Button("Return to Menu");
+		exitButton.setId("exit-popup-button");
+		
+		exitButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				popupStage.hide();
+				primaryStage.setScene(Main.mainMenu.getScene());
+			}
+		});
+		
+		root.getChildren().add(exitButton);
+		
+		Scene s = new Scene(root);
+		s.getStylesheets().add("create-game-menu.css");
+		popupStage = new Stage();
+		popupStage.setScene(s);
+		popupStage.initOwner(primaryStage);
+		popupStage.initModality(Modality.WINDOW_MODAL);
+		popupStage.show();
 	}
 	
 }

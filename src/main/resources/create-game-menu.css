@@ -41,9 +41,9 @@
 }
 
 #exit-popup-button {
-	-fx-padding: 3;
+	-fx-padding: 5, 55, 5, 55;
 	-fx-font-size: 9pt;
-	-fx-pref-width: 50px;
+	-fx-pref-width: -1;
 	-fx-background-color: #E75D2A;
 }
 
