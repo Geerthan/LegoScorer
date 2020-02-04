@@ -45,6 +45,13 @@
 	-fx-pref-width: -1;
 }
 
+#disabled-popup-button {
+	-fx-background-color: #A7A8AA;
+	-fx-padding: 5, 55, 5, 55;
+	-fx-font-size: 9pt;
+	-fx-pref-width: -1;
+}
+
 #exit-popup-button {
 	-fx-padding: 5, 55, 5, 55;
 	-fx-font-size: 9pt;

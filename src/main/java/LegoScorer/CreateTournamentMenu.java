@@ -5,10 +5,12 @@ import java.io.IOException;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
@@ -16,6 +18,8 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -155,7 +159,7 @@ public class CreateTournamentMenu {
 		
 		genScheduleButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-//				if(gameFile == null || teamFile == null || tournamentFile == null) return;
+				if(gameFile == null || teamFile == null || tournamentFile == null) return;
 				
 				showScheduleConfigPopup();
 				
@@ -299,90 +303,54 @@ public class CreateTournamentMenu {
 		root.setPadding(new Insets(15));
 		root.setAlignment(Pos.CENTER);
 		
-		TextField startTimeField = new TextField("00:00");
-		startTimeField.setTextFormatter(new TextFormatter<String>(field -> {
-			
-			String text = field.getControlNewText();
-			String newText = "";
-			
-			for(int i = 0;i < text.length();i++) {
-				if(newText.length() == 2) newText += ':';
-				
-				if(Character.isDigit(text.charAt(i)))
-					newText += text.charAt(i);
-				
-				if(newText.length() == 5) break;
-			}
-			
-			while(newText.length() < 5) {
-				if(newText.length() == 2) newText += ':';
-				newText += '0';
-			}
-			
-			if(Integer.valueOf("" + newText.charAt(0) + newText.charAt(1)) > 12) {
-				newText = "24" + newText.substring(2);
-			}
-			
-			if(Integer.valueOf("" + newText.charAt(3) + newText.charAt(4)) > 59) {
-				newText = newText.substring(0, 3) + "00";
-			}
-			
-			field.setRange(0, 5);
-			field.setText(newText);
-			
-			if(field.getCaretPosition() == 2) {
-				field.setCaretPosition(3);
-				field.setAnchor(3);
-			}
-			
-			return field;
-			
-		}));
+		Text titleText = new Text("Schedule Parameters");
+		titleText.setId("dialog-title-text");
+		VBox.setMargin(titleText, new Insets(0, 0, 8, 0));
 		
-		TextField endTimeField = new TextField("00:00");
-		endTimeField.setTextFormatter(new TextFormatter<String>(field -> {
-			
-			String text = field.getControlNewText();
-			String newText = "";
-			
-			for(int i = 0;i < text.length();i++) {
-				if(newText.length() == 2) newText += ':';
-				
-				if(Character.isDigit(text.charAt(i)))
-					newText += text.charAt(i);
-				
-				if(newText.length() == 5) break;
-			}
-			
-			while(newText.length() < 5) {
-				if(newText.length() == 2) newText += ':';
-				newText += '0';
-			}
-			
-			if(Integer.valueOf("" + newText.charAt(0) + newText.charAt(1)) > 12) {
-				newText = "24" + newText.substring(2);
-			}
-			
-			if(Integer.valueOf("" + newText.charAt(3) + newText.charAt(4)) > 59) {
-				newText = newText.substring(0, 3) + "00";
-			}
-			
-			field.setRange(0, 5);
-			field.setText(newText);
-			
-			if(field.getCaretPosition() == 2) {
-				field.setCaretPosition(3);
-				field.setAnchor(3);
-			}
-			
-			return field;
-			
-		}));
+		root.getChildren().add(titleText);
 		
-		root.getChildren().addAll(startTimeField, endTimeField);
+		GridPane labelledInputs = new GridPane();
 		
-		Spinner<Integer> matchSpinner = new Spinner<Integer>(1, 400, 50);
+		ColumnConstraints labelCol = new ColumnConstraints();
+		labelCol.setHalignment(HPos.RIGHT);
+		
+		labelledInputs.getColumnConstraints().add(labelCol);
+		
+		Label startTimeLabel = new Label("Start Time: ");
+		Label endTimeLabel = new Label("End Time: ");
+		Label teamMatchLabel = new Label("Matches per team: ");
+		
+		labelledInputs.add(startTimeLabel, 0, 0);
+		labelledInputs.add(endTimeLabel, 0, 1);
+		labelledInputs.add(teamMatchLabel, 0, 2);
+		
+		TimeField startTimeField = new TimeField("00:00");
+		TimeField endTimeField = new TimeField("00:00");
+		
+		Spinner<Integer> matchSpinner = new Spinner<Integer>(0, 99, 8);
 		matchSpinner.setEditable(true);
+		
+		matchSpinner.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.isEmpty()) {
+				
+				if(newValue.length() > oldValue.length() && newValue.length() > 3) {
+					newValue = newValue.substring(0, 3);
+					matchSpinner.getEditor().textProperty().setValue(newValue);
+				}
+				
+				for(int i = 0;i < newValue.length();i++) {
+					if(!Character.isDigit(newValue.charAt(i))) {
+						if(oldValue.isEmpty()) {
+							matchSpinner.getEditor().textProperty().setValue(oldValue);
+						}
+						else {
+							matchSpinner.getEditor().textProperty().setValue(oldValue);
+						}
+						break;
+					}
+				}
+			}
+		});
 		
 //		matchSpinner.focusedProperty().addListener((observable, oldValue, newValue) -> {
 //			if(!newValue) {
@@ -390,8 +358,30 @@ public class CreateTournamentMenu {
 //			}
 //		});
 		
+		labelledInputs.add(startTimeField, 1, 0);
+		labelledInputs.add(endTimeField, 1, 1);
+		labelledInputs.add(matchSpinner, 1, 2);
 		
-		root.getChildren().addAll(matchSpinner);
+		root.getChildren().add(labelledInputs);
+		
+		GridPane statsBox = new GridPane();
+		statsBox.setAlignment(Pos.CENTER);
+		statsBox.getColumnConstraints().add(labelCol);
+		
+		Text matchBreakTimeLabel = new Text("Time between matches: ");
+		Text totalMatchLabel = new Text("Total match count: ");
+		Text matchBreakTimeAmt = new Text("4m 30s");
+		Text totalMatchAmt = new Text("60");
+		
+		statsBox.add(matchBreakTimeLabel, 0, 0);
+		statsBox.add(totalMatchLabel, 0, 1);
+		statsBox.add(matchBreakTimeAmt, 1, 0);
+		statsBox.add(totalMatchAmt, 1, 1);
+		
+		root.getChildren().add(statsBox);
+		
+		HBox buttonBox = new HBox();
+		buttonBox.setAlignment(Pos.CENTER);
 		
 		Button exitButton = new Button("Exit");
 		exitButton.setId("exit-popup-button");
@@ -402,7 +392,11 @@ public class CreateTournamentMenu {
 			}
 		});
 		
-		root.getChildren().add(exitButton);
+		Button generateButton = new Button("Generate");
+		generateButton.setId("disabled-popup-button");
+		
+		buttonBox.getChildren().addAll(exitButton, generateButton);
+		root.getChildren().add(buttonBox);
 		
 		Scene s = new Scene(root);
 		s.getStylesheets().add("create-tournament-menu.css");

@@ -93,7 +93,7 @@ public class Database {
 		return "File save successful.";
 		
 	}
-	
+
 	public static String createGameType(String gameName, int teamAmt, 
 			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals) {
 		
@@ -147,8 +147,11 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(file));
 		String str;
 		
-		while((str = in.readLine()) != null)
-			teams.add(str.substring(0, str.length()-1));
+		while((str = in.readLine()) != null) {
+			if(str.charAt(str.length()-1) == ',')
+				teams.add(str.substring(0, str.length()-1));
+			else teams.add(str);		
+		}
 		
 		in.close();
 		
@@ -160,4 +163,6 @@ public class Database {
 		return FXCollections.observableArrayList(getTeams(file));
 	}
 
+//	public static 
+	
 }
