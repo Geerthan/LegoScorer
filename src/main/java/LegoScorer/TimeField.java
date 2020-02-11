@@ -46,4 +46,9 @@ public class TimeField extends TextField {
 		}));
 	}
 	
+	public int getValue() {
+		String textVal = getText();
+		return Integer.valueOf("" + textVal.charAt(0) + textVal.charAt(1) + textVal.charAt(3) + textVal.charAt(4));
+	}
+	
 }

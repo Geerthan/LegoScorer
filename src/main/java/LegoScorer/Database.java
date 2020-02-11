@@ -3,15 +3,15 @@ package LegoScorer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.stage.FileChooser;
 
 public class Database {
 	
@@ -163,6 +163,157 @@ public class Database {
 		return FXCollections.observableArrayList(getTeams(file));
 	}
 
-//	public static 
+	public static int getTeamAmt(File file) throws IOException {
+		return getTeams(file).size();
+	}
+	
+	public static int getTeamsPerMatch(File file) throws IOException {
+		
+		String str;
+		
+		BufferedReader in = new BufferedReader(new FileReader(file));
+		if(in.readLine() == null) {
+			in.close();
+			return 0;
+		}
+		else if((str = in.readLine()) == null) {
+			in.close();
+			return 0;
+		}
+		else {
+			in.close();
+			return Integer.valueOf(str);
+		}
+		
+	}
+	
+	public static String createSchedule(File gameFile, File teamFile, int teamMatchCount) {
+		
+		int teamsPerMatch;
+		
+		try {
+			teamsPerMatch = getTeamsPerMatch(gameFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int teamAmt = 0;
+		
+		try {
+			teamAmt = getTeamAmt(teamFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int teamIter = 0;
+		int curTeam = 1;
+		
+		int scheduledTeamCount = 0;
+		
+		int[] teamList = new int[teamAmt];
+		boolean[] teamSelect = new boolean[teamAmt];
+		
+		for(int i = 0;i < teamAmt;i++) {
+			teamList[i] = i+1;
+			teamSelect[i] = false;
+		}
+		
+		for(int i = 0;i < teamMatchCount;i++) {
+			
+			teamIter++;
+			if(teamIter == teamAmt) teamIter = 1;
+			curTeam = 1;
+			
+			for(int j = 0;j < teamAmt;j++) teamSelect[j] = false;
+			
+			for(int j = 0;j < teamAmt;j++) {
+				
+				while(teamSelect[curTeam-1]) {
+					curTeam++;
+					if(curTeam > teamAmt) curTeam %= teamAmt;
+				}
+				
+				System.out.print(curTeam + " "); //Select a team
+				teamSelect[curTeam-1] = true;
+				
+				scheduledTeamCount++;
+				if(scheduledTeamCount % teamsPerMatch == 0) System.out.println();
+				
+				curTeam += teamIter;
+				if(curTeam > teamAmt) curTeam %= teamAmt;
+				
+			}
+			
+			if(i == teamMatchCount-1 && scheduledTeamCount % teamsPerMatch != 0) {
+				
+				System.out.print(" |fill| ");
+				
+				teamIter++;
+				if(teamIter == teamAmt) teamIter = 1;
+				curTeam = 1;
+				
+				for(int j = 0;j < teamAmt;j++) teamSelect[j] = false;
+				
+				for(int j = 0;j < teamsPerMatch - (scheduledTeamCount % teamsPerMatch);j++) {
+					
+					while(teamSelect[curTeam-1]) {
+						curTeam++;
+						if(curTeam > teamAmt) curTeam %= teamAmt;
+					}
+					
+					System.out.print(curTeam + " "); //Select a team
+					teamSelect[curTeam-1] = true;
+					
+					//scheduledTeamCount++;
+					//if(scheduledTeamCount % teamsPerMatch == 0) System.out.println();
+					
+					curTeam += teamIter;
+					if(curTeam > teamAmt) curTeam %= teamAmt;
+					
+				}
+				
+			}
+			
+		}
+		
+		return "";
+		
+	}
+
+	public static String getTotalMatchCount(File gameFile, File teamFile, int teamMatchCount) {
+		
+		int teamsPerMatch;
+		
+		try {
+			teamsPerMatch = getTeamsPerMatch(gameFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "-1";
+		}
+		
+		int teamAmt = 0;
+		
+		try {
+			teamAmt = getTeamAmt(teamFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "-1";
+		}
+		
+		return "" + (int) Math.ceil(((double) teamAmt * teamMatchCount) / teamsPerMatch);
+		
+	}
+	
+	public static String getMatchBreakTime(File gameFile, File teamFile, int teamMatchCount, 
+			int startTime, int endTime) {
+		
+		String totalMatchCount = getTotalMatchCount(gameFile, teamFile, teamMatchCount);
+		if(totalMatchCount == "-1") return "-1";
+		
+		return "0";
+		
+	}
 	
 }

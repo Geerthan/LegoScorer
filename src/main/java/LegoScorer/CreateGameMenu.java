@@ -34,11 +34,11 @@ public class CreateGameMenu {
 	public Scene getScene() {
 		
 		VBox root = new VBox();
-		root.setMaxWidth(550);
+		root.setMaxWidth(700);
 		
 		StackPane topStack = new StackPane();
 		
-		Rectangle topRect = new Rectangle(550, 50, Color.web("#003C71"));
+		Rectangle topRect = new Rectangle(700, 50, Color.web("#003C71"));
 		
 		Image logo = new Image("img/otu_dark.png");
 		ImageView logoView = new ImageView(logo);
@@ -328,7 +328,7 @@ public class CreateGameMenu {
 		root.setPadding(new Insets(15));
 		root.setAlignment(Pos.CENTER);
 		
-		Text exitText = new Text("Game \"" + gameName + "\" successfully saved as file \"" + gameName + ".dat\".");
+		Text exitText = new Text("Game \"" + gameName + "\" successfully saved as file \"" + gameName + ".gdat\".");
 		VBox.setMargin(exitText, new Insets(0, 0, 5, 0));
 		root.getChildren().add(exitText);
 		

@@ -48,7 +48,7 @@ public class CreateTournamentMenu {
 	final String genScheduleTextVal = "Generate the match schedule. This button can only be used after choosing a game type "
 			+ "and importing a team list.";
 	
-	Stage primaryStage, popupStage;
+	Stage primaryStage, popupStage, popupMessageStage;
 	
 	File gameFile, teamFile, tournamentFile;
 	
@@ -120,7 +120,7 @@ public class CreateTournamentMenu {
 			}
 		);
 		
-		importTeamButton.setOnAction(new EventHandler<ActionEvent>() {
+		importTeamButton.setOnAction(new EventHandler<ActionEvent>() { //TODO Set text to team count ex. "58 Teams"
 			public void handle(ActionEvent e) {
 				showTeamChoosePopup(importTeamButton, genScheduleButton);
 			}
@@ -324,11 +324,33 @@ public class CreateTournamentMenu {
 		labelledInputs.add(endTimeLabel, 0, 1);
 		labelledInputs.add(teamMatchLabel, 0, 2);
 		
-		TimeField startTimeField = new TimeField("00:00");
-		TimeField endTimeField = new TimeField("00:00");
-		
-		Spinner<Integer> matchSpinner = new Spinner<Integer>(0, 99, 8);
+		//TODO Relocate this declaration, possibly make them all at start of method
+		Spinner<Integer> matchSpinner = new Spinner<Integer>(1, 99, 8);
 		matchSpinner.setEditable(true);
+		
+		TimeField startTimeField = new TimeField("09:00");
+		TimeField endTimeField = new TimeField("15:00");
+		
+		//TODO Relocate this along with the other text values
+		Text matchBreakTimeAmt = new Text(Database.getMatchBreakTime(gameFile, teamFile, 
+				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()), 
+				startTimeField.getValue(), endTimeField.getValue()));
+		
+		startTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
+			matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
+				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
+				startTimeField.getValue(), endTimeField.getValue()));
+		});
+		
+		startTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
+			matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
+				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
+				startTimeField.getValue(), endTimeField.getValue()));
+		});
+		
+		//TODO Relocate this along with the other text values
+		Text totalMatchAmt = new Text(Database.getTotalMatchCount(gameFile, teamFile, 
+				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue())));
 		
 		matchSpinner.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
 			if(!newValue.isEmpty()) {
@@ -340,7 +362,7 @@ public class CreateTournamentMenu {
 				
 				for(int i = 0;i < newValue.length();i++) {
 					if(!Character.isDigit(newValue.charAt(i))) {
-						if(oldValue.isEmpty()) {
+						if(oldValue.isEmpty()) { //TODO fix this logic
 							matchSpinner.getEditor().textProperty().setValue(oldValue);
 						}
 						else {
@@ -349,7 +371,11 @@ public class CreateTournamentMenu {
 						break;
 					}
 				}
+				
+				totalMatchAmt.setText(Database.getTotalMatchCount(gameFile, teamFile, 
+						Integer.valueOf(matchSpinner.getEditor().textProperty().getValue())));
 			}
+			else totalMatchAmt.setText(Database.getTotalMatchCount(gameFile, teamFile, 0));
 		});
 		
 //		matchSpinner.focusedProperty().addListener((observable, oldValue, newValue) -> {
@@ -370,8 +396,6 @@ public class CreateTournamentMenu {
 		
 		Text matchBreakTimeLabel = new Text("Time between matches: ");
 		Text totalMatchLabel = new Text("Total match count: ");
-		Text matchBreakTimeAmt = new Text("4m 30s");
-		Text totalMatchAmt = new Text("60");
 		
 		statsBox.add(matchBreakTimeLabel, 0, 0);
 		statsBox.add(totalMatchLabel, 0, 1);
@@ -394,6 +418,14 @@ public class CreateTournamentMenu {
 		
 		Button generateButton = new Button("Generate");
 		generateButton.setId("disabled-popup-button");
+		
+		generateButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { //TODO Add implementation
+				String msg = Database.createSchedule(gameFile, teamFile, matchSpinner.getValue());
+				if(msg != "") showErrorDialog(msg);
+				else showErrorDialog("Test Creation Success");
+			}
+		});
 		
 		buttonBox.getChildren().addAll(exitButton, generateButton);
 		root.getChildren().add(buttonBox);
@@ -422,7 +454,7 @@ public class CreateTournamentMenu {
 		
 		exitButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				popupStage.hide();
+				popupMessageStage.hide();
 			}
 		});
 		
@@ -430,11 +462,11 @@ public class CreateTournamentMenu {
 		
 		Scene s = new Scene(root);
 		s.getStylesheets().add("create-tournament-menu.css");
-		popupStage = new Stage();
-		popupStage.setScene(s);
-		popupStage.initOwner(primaryStage);
-		popupStage.initModality(Modality.WINDOW_MODAL);
-		popupStage.show();
+		popupMessageStage = new Stage();
+		popupMessageStage.setScene(s);
+		popupMessageStage.initOwner(primaryStage);
+		popupMessageStage.initModality(Modality.WINDOW_MODAL);
+		popupMessageStage.show();
 	}
 	
 }
