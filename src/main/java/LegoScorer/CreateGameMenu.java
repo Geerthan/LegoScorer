@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -15,6 +16,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -49,9 +52,19 @@ public class CreateGameMenu {
 		
 		root.getChildren().add(topStack);
 		
-		GridPane formPane = new GridPane();
-		formPane.setPadding(new Insets(20, 20, 10, 20));
-		formPane.setHgap(15);
+		HBox formFields = new HBox();
+		formFields.setAlignment(Pos.CENTER); //TODO move to css
+		formFields.setSpacing(25);
+		formFields.setPadding(new Insets(15, 0, 0, 0));
+		
+		HBox nameFields = new HBox();
+		nameFields.setAlignment(Pos.CENTER);
+		
+		Label nameLabel = new Label("Game name: ");
+		TextField nameTextField = new TextField();
+		nameTextField.setMaxWidth(135);
+		
+		nameFields.getChildren().addAll(nameLabel, nameTextField);
 		
 		HBox teamAmtFields = new HBox();
 		teamAmtFields.setAlignment(Pos.CENTER);
@@ -61,20 +74,21 @@ public class CreateGameMenu {
 		
 		teamAmtFields.getChildren().addAll(teamAmtLabel, teamAmtSpinner);
 		
-		HBox nameFields = new HBox();
-		nameFields.setAlignment(Pos.CENTER);
+		HBox matchTimeFields = new HBox();
+		matchTimeFields.setAlignment(Pos.CENTER);
 		
-		Label nameLabel = new Label("Game name: ");
-		TextField nameTextField = new TextField();
+		Label matchTimeLabel = new Label("Time per match: ");
+		TimeField matchTimeField = new TimeField("02:00"); //TODO make into Minutes format instead of hrs
+		matchTimeField.setPrefWidth(60); //TODO move to .css
 		
-		nameTextField.setMaxWidth(135);
+		matchTimeFields.getChildren().addAll(matchTimeLabel, matchTimeField);
 		
-		nameFields.getChildren().addAll(nameLabel, nameTextField);
+		formFields.getChildren().addAll(nameFields, teamAmtFields, matchTimeFields);
+		root.getChildren().add(formFields);
 		
-		formPane.getChildren().addAll(teamAmtFields, nameFields);
-		
-		GridPane.setConstraints(teamAmtFields, 0, 0);
-		GridPane.setConstraints(nameFields, 1, 0);
+		GridPane formPane = new GridPane();
+		formPane.setPadding(new Insets(0, 20, 10, 20));
+		formPane.setHgap(15);
 		
 		Label uniqueScoreLabel = new Label("Unique Scoring Fields");
 		Label repeatScoreLabel = new Label("Repeatable Scoring Fields");
@@ -83,18 +97,26 @@ public class CreateGameMenu {
 		GridPane.setMargin(repeatScoreLabel, new Insets(10, 0, 0, 0));
 		
 		formPane.getChildren().addAll(uniqueScoreLabel, repeatScoreLabel);
-		GridPane.setConstraints(uniqueScoreLabel, 0, 1);
-		GridPane.setConstraints(repeatScoreLabel, 1, 1);
+		GridPane.setConstraints(uniqueScoreLabel, 0, 0);
+		GridPane.setConstraints(repeatScoreLabel, 1, 0);
 		
 		VBox uniqueScoreBox = new VBox();
 		VBox repeatScoreBox = new VBox();
 		
+		ListView<HBox> repeatScoreLV = new ListView<HBox>();
+		repeatScoreLV.setPrefHeight(250);
+		repeatScoreLV.setFocusTraversable(false);
+		//TODO find proper selection removal
+		repeatScoreLV.selectionModelProperty().addListener((observable, oldValue, newValue) -> {
+			repeatScoreLV.getSelectionModel().clearSelection();
+		});
+		
 		GridPane.setMargin(uniqueScoreBox, new Insets(10, 0, 0, 0));
 		GridPane.setMargin(repeatScoreBox, new Insets(10, 0, 0, 0));
 		
-		formPane.getChildren().addAll(uniqueScoreBox, repeatScoreBox);
-		GridPane.setConstraints(uniqueScoreBox, 0, 3);
-		GridPane.setConstraints(repeatScoreBox, 1, 3);
+		formPane.getChildren().addAll(uniqueScoreBox, repeatScoreLV);
+		GridPane.setConstraints(uniqueScoreBox, 0, 1);
+		GridPane.setConstraints(repeatScoreLV, 1, 1);
 		
 		HBox uniqueScoreBtnBox = new HBox();
 		
@@ -102,12 +124,9 @@ public class CreateGameMenu {
 		Button removeUniqueScoreBtn = new Button("Remove");
 		uniqueScoreBtnBox.getChildren().addAll(addUniqueScoreBtn, removeUniqueScoreBtn);
 		
-		HBox repeatScoreBtnBox = new HBox();
-		
-		Button addRepeatScoreBtn = new Button("Add");
+		Button addRepeatScoreBtn = new Button("Add New");
 		Button removeRepeatScoreBtn = new Button("Remove");
-		repeatScoreBtnBox.getChildren().addAll(addRepeatScoreBtn, removeRepeatScoreBtn);
-		
+				
 		addUniqueScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				
@@ -147,7 +166,13 @@ public class CreateGameMenu {
 		addRepeatScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				
-				VBox repeatItemBox = new VBox();
+				HBox repeatItemBox = new HBox();
+				repeatItemBox.setAlignment(Pos.CENTER_LEFT);
+				repeatItemBox.setPadding(new Insets(5, 0, 5, 0));
+				
+				VBox repeatItemFormBox = new VBox();
+				repeatItemFormBox.setSpacing(5);
+				
 				HBox nameBox = new HBox();
 				nameBox.setAlignment(Pos.CENTER_LEFT);
 				
@@ -163,10 +188,21 @@ public class CreateGameMenu {
 				Spinner<Double> pointsSpinner = new Spinner<Double>(0, 50, 1, 0.5);
 				pointsBox.getChildren().addAll(pointsLabel, pointsSpinner);
 				
-				VBox.setMargin(pointsBox, new Insets(5, 0, 15, 0));
+				repeatItemFormBox.getChildren().addAll(nameBox, pointsBox);
 				
-				repeatItemBox.getChildren().addAll(nameBox, pointsBox);
-				repeatScoreBox.getChildren().add(repeatItemBox);
+				Button deleteBtn = new Button();
+				deleteBtn.setId("delete-item-button");
+				deleteBtn.setOnAction(new EventHandler<ActionEvent>() {
+					public void handle(ActionEvent e) {
+						repeatScoreLV.getItems().remove(repeatItemBox);
+					}
+				});
+				
+				HBox.setHgrow(repeatItemFormBox, Priority.ALWAYS);
+				
+				repeatItemBox.getChildren().addAll(repeatItemFormBox, deleteBtn);
+				
+				repeatScoreLV.getItems().add(repeatItemBox);
 				
 				primaryStage.sizeToScene();
 				
@@ -175,15 +211,16 @@ public class CreateGameMenu {
 		
 		removeRepeatScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				repeatScoreBox.getChildren().remove(repeatScoreBox.getChildren().size()-1);
+				if(repeatScoreLV.getItems().size() != 0)
+					repeatScoreLV.getItems().remove(repeatScoreLV.getItems().size()-1);
 				primaryStage.sizeToScene();
 			}
 		});
 		
-		formPane.getChildren().addAll(uniqueScoreBtnBox, repeatScoreBtnBox);
+		formPane.getChildren().addAll(uniqueScoreBtnBox, addRepeatScoreBtn);
 		
 		GridPane.setConstraints(uniqueScoreBtnBox, 0, 2);
-		GridPane.setConstraints(repeatScoreBtnBox, 1, 2);
+		GridPane.setConstraints(addRepeatScoreBtn, 1, 2);
 		
 		Button exitBtn = new Button("Back");
 		exitBtn.setId("exit-button");

@@ -7,7 +7,7 @@
 }
 
 .spinner {
-	-fx-pref-width: 100px;
+	-fx-pref-width: 75px;
 }
 
 .text-field {
@@ -30,6 +30,23 @@
 .button:hover {
 	-fx-text-fill: #D8DFE6;
 	-fx-background-color: #003C71;
+}
+
+#delete-item-button {
+	-fx-pref-width: 30px;
+	-fx-pref-height: 30px;
+	-fx-background-insets: 0;
+	-fx-padding: 0;
+	-fx-background-color: transparent;
+	-fx-border-width: 0;
+	-fx-background-image: url('img/google_mat_del.png');
+	-fx-background-repeat: no-repeat;
+	-fx-background-size: 30px;
+	-fx-background-position: center;
+}
+
+#delete-item-button:hover {
+	-fx-background-image: url('img/google_mat_del_hover.png');
 }
 
 #exit-button {
