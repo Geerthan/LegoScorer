@@ -3,6 +3,7 @@ package LegoScorer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -411,6 +412,68 @@ public class Database {
 
 		return breakTimeStr;
 		
+	}
+	
+	public static String[] getUniqueScoreFields(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int fields = Integer.valueOf(in.readLine());
+		int uniqueFields = 0;
+		int counter = 0;
+		
+		String[] fieldLines = new String[fields];
+		for(int i = 0;i < fields;i++) {
+			fieldLines[i] = in.readLine();
+			in.readLine(); //Ignore score value
+			if(fieldLines[i].charAt(0) == 'u') uniqueFields++;
+		}
+		
+		String[] uniqueScoreFields = new String[uniqueFields];
+		for(int i = 0;i < fields;i++) {
+			if(fieldLines[i].charAt(0) == 'u') {
+				uniqueScoreFields[counter] = fieldLines[i].substring(2);
+				counter++;
+			}
+		}
+		
+		in.close();
+		return uniqueScoreFields;
+	}
+	
+	public static String[] getRepeatScoreFields(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int fields = Integer.valueOf(in.readLine());
+		int repeatFields = 0;
+		int counter = 0;
+		
+		String[] fieldLines = new String[fields];
+		for(int i = 0;i < fields;i++) {
+			fieldLines[i] = in.readLine();
+			in.readLine(); //Ignore score value
+			if(fieldLines[i].charAt(0) == 'r') repeatFields++;
+		}
+		
+		String[] repeatScoreFields = new String[repeatFields];
+		for(int i = 0;i < fields;i++) {
+			if(fieldLines[i].charAt(0) == 'r') {
+				repeatScoreFields[counter] = fieldLines[i].substring(2);
+				counter++;
+			}
+		}
+		
+		in.close();
+		return repeatScoreFields;
 	}
 	
 	public static int[][] getSchedule(File tournamentFile) throws IOException {

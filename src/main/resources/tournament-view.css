@@ -21,3 +21,24 @@
 #time-label {
 	-fx-font: 13pt "Ubuntu";
 }
+
+#title-label {
+	-fx-padding: 20px 0px 10px 0px;
+	-fx-font: 15pt "Ubuntu";
+}
+
+.check-box > .box {
+	-fx-padding: 0.35em 0.35em 0.525em 0.525em;
+}
+
+.check-box > .box > .mark {
+	-fx-padding: 0.875em 0.875em 1.05em 1.05em;
+}
+
+.spinner {
+	-fx-pref-width: 60px;
+}
+
+.spinner > .text-field {
+	-fx-alignment: center;
+}
