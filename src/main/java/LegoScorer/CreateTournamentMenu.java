@@ -424,10 +424,14 @@ public class CreateTournamentMenu {
 		generateButton.setId("disabled-popup-button");
 		
 		generateButton.setOnAction(new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) { //TODO Add implementation
-				String msg = Database.createSchedule(gameFile, teamFile, matchSpinner.getValue());
+			public void handle(ActionEvent e) {
+				String msg = Database.createTournamentFile(tournamentFile, gameFile, teamFile, 
+						startTimeField.getValue(), endTimeField.getValue(), matchSpinner.getValue());
 				if(msg != "") showErrorDialog(msg);
-				else showErrorDialog("Test Creation Success");
+				else {
+					popupStage.hide();
+					primaryStage.setScene(Main.mainMenu.getScene());
+				}
 			}
 		});
 		

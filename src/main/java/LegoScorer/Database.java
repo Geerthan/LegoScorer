@@ -33,7 +33,7 @@ public class Database {
 		
 	}
 	
-	public static String createTournamentFile(File tournamentFile, File gameFile, File teamFile) {
+	public static String createTournamentFile(File tournamentFile, File gameFile, File teamFile, int startTime, int endTime, int teamMatchCount) {
 		
 		ArrayList<String> teams;
 		
@@ -60,29 +60,75 @@ public class Database {
 			return "ERROR: " + e.toString();
 		}
 		
+		int teamsPerMatch;
+		try {
+			teamsPerMatch = getTeamsPerMatch(gameFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int[][] schedule;
+		
+		try {
+			schedule = createSchedule(gameFile, teamFile, teamMatchCount);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int gameTime;
+		
+		try {
+			gameTime = getTimePerMatch(gameFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int breakTime = Integer.valueOf(getMatchBreakTime(gameFile, teamFile, teamMatchCount, startTime, endTime).replace(":", ""));
+		double timeDif = (gameTime / 100) + (breakTime / 100) + (gameTime % 100 / 60.0) + (breakTime % 100 / 60.0);
+		
+		double curTime = (startTime / 100 * 60) + (startTime % 100);
+		
+		for(int i = 0;i < schedule.length;i++) {
+			schedule[i][0] = ((int) curTime / 60 * 100) + (int) (curTime % 60);
+			curTime += timeDif;
+		}
+		
 		BufferedWriter writer;
 		
 		try {
 			writer = new BufferedWriter(new FileWriter(tournamentFile));
 			
 			//File format: Start with modified game file, then team list, then tournament data
-			writer.write(gameFileStr.get(0) + "\n" + gameFileStr.get(1) + "\n");
+			writer.write(gameFileStr.get(0) + "\n" + gameFileStr.get(1) + "\n" + gameFileStr.get(2) + "\n");
 			
 			//Amount of scoring fields
 			writer.write(gameFileStr.size()/2-1 + "\n");
 			
 			//Each scoring field
-			for(int i = 2;i < gameFileStr.size();i++) {
+			for(int i = 3;i < gameFileStr.size();i++) {
 				writer.write(gameFileStr.get(i) + "\n");
 			}
+			
+			//Amount of teams
+			writer.write(teams.size() + "\n");
 			
 			//Each team name
 			for(int i = 0;i < teams.size();i++)
 				if(!teams.get(i).isBlank())
 					writer.write(teams.get(i) + "\n");
 			
-			//End of team list
-			writer.write("\n");
+			//Teams in match, in format: [time team1 team2 .. teamx] (for all teams) [field1 .. fieldx]
+			for(int i = 0;i < schedule.length;i++) {
+				for(int j = 0;j < schedule[i].length;j++)
+					writer.write(schedule[i][j] + " ");
+				//gameFileStr.size()/2-1 is the amt of scoring fields
+				for(int j = 0;j < (gameFileStr.size()/2-1)*teamsPerMatch;j++) 
+					writer.write("0 ");
+				writer.write("\n");
+			}
 			
 			writer.close();			
 		} catch (IOException e) {
@@ -90,7 +136,7 @@ public class Database {
 			return "ERROR: " + e.toString();
 		}
 		
-		return "File save successful.";
+		return "";
 		
 	}
 
@@ -212,33 +258,26 @@ public class Database {
 		
 	}
 	
-	public static String createSchedule(File gameFile, File teamFile, int teamMatchCount) {
+	public static int[][] createSchedule(File gameFile, File teamFile, int teamMatchCount) throws IOException {
 		
-		int teamsPerMatch;
+		int teamsPerMatch = getTeamsPerMatch(gameFile);
 		
-		try {
-			teamsPerMatch = getTeamsPerMatch(gameFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "ERROR: " + e.toString();
-		}
-		
-		int teamAmt = 0;
-		
-		try {
-			teamAmt = getTeamAmt(teamFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "ERROR: " + e.toString();
-		}
+		int teamAmt = getTeamAmt(teamFile);
 		
 		int teamIter = 0;
 		int curTeam = 1;
+		
+		int matchesScheduled = 0, teamsInMatch = 0;
 		
 		int scheduledTeamCount = 0;
 		
 		int[] teamList = new int[teamAmt];
 		boolean[] teamSelect = new boolean[teamAmt];
+		
+		int totalMatchCount = Integer.valueOf(getTotalMatchCount(gameFile,  teamFile, teamMatchCount));
+
+		//Schedule[Match#][0] is reserved for timing information
+		int[][] schedule = new int[totalMatchCount][teamsPerMatch+1];
 		
 		for(int i = 0;i < teamAmt;i++) {
 			teamList[i] = i+1;
@@ -263,6 +302,13 @@ public class Database {
 				System.out.print(curTeam + " "); //Select a team
 				teamSelect[curTeam-1] = true;
 				
+				schedule[matchesScheduled][teamsInMatch+1] = curTeam;
+				teamsInMatch++;
+				if(teamsInMatch == teamsPerMatch) {
+					teamsInMatch = 0;
+					matchesScheduled++;
+				}
+				
 				scheduledTeamCount++;
 				if(scheduledTeamCount % teamsPerMatch == 0) System.out.println();
 				
@@ -272,8 +318,6 @@ public class Database {
 			}
 			
 			if(i == teamMatchCount-1 && scheduledTeamCount % teamsPerMatch != 0) {
-				
-				System.out.print(" |fill| ");
 				
 				teamIter++;
 				if(teamIter == teamAmt) teamIter = 1;
@@ -291,8 +335,12 @@ public class Database {
 					System.out.print(curTeam + " "); //Select a team
 					teamSelect[curTeam-1] = true;
 					
-					//scheduledTeamCount++;
-					//if(scheduledTeamCount % teamsPerMatch == 0) System.out.println();
+					schedule[matchesScheduled][teamsInMatch+1] = curTeam;
+					teamsInMatch++;
+					if(teamsInMatch == teamsPerMatch) {
+						teamsInMatch = 0;
+						matchesScheduled++;
+					}
 					
 					curTeam += teamIter;
 					if(curTeam > teamAmt) curTeam %= teamAmt;
@@ -303,7 +351,7 @@ public class Database {
 			
 		}
 		
-		return "";
+		return schedule;
 		
 	}
 
@@ -348,7 +396,7 @@ public class Database {
 		
 		//TODO have TimeFields work on hr:min and min:sec
 		int totTimeMin = ((endTime - startTime) / 100 * 60) + ((endTime - startTime) % 100);
-		double timePerMatchMin = (timePerMatch / 100) + (timePerMatch % 100 / 60);
+		double timePerMatchMin = (timePerMatch / 100) + (timePerMatch % 100 / 60.0);
 
 		double breakTime = (totTimeMin - (matchCountInt * timePerMatchMin)) / (matchCountInt - 1);
 		if(breakTime < 0) return "ERROR";
