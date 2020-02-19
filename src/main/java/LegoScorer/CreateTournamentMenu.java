@@ -342,7 +342,7 @@ public class CreateTournamentMenu {
 				startTimeField.getValue(), endTimeField.getValue()));
 		});
 		
-		startTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
+		endTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
 			matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
 				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
 				startTimeField.getValue(), endTimeField.getValue()));
@@ -374,6 +374,10 @@ public class CreateTournamentMenu {
 				
 				totalMatchAmt.setText(Database.getTotalMatchCount(gameFile, teamFile, 
 						Integer.valueOf(matchSpinner.getEditor().textProperty().getValue())));
+				
+				matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
+						Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
+						startTimeField.getValue(), endTimeField.getValue()));
 			}
 			else totalMatchAmt.setText(Database.getTotalMatchCount(gameFile, teamFile, 0));
 		});

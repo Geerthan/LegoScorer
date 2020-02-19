@@ -100,8 +100,13 @@ public class CreateGameMenu {
 		GridPane.setConstraints(uniqueScoreLabel, 0, 0);
 		GridPane.setConstraints(repeatScoreLabel, 1, 0);
 		
-		VBox uniqueScoreBox = new VBox();
-		VBox repeatScoreBox = new VBox();
+		ListView<HBox> uniqueScoreLV = new ListView<HBox>();
+		uniqueScoreLV.setPrefHeight(250);
+		uniqueScoreLV.setFocusTraversable(false);
+		//TODO find proper selection removal
+		uniqueScoreLV.selectionModelProperty().addListener((observable, oldValue, newValue) -> {
+			uniqueScoreLV.getSelectionModel().clearSelection();
+		});
 		
 		ListView<HBox> repeatScoreLV = new ListView<HBox>();
 		repeatScoreLV.setPrefHeight(250);
@@ -111,26 +116,23 @@ public class CreateGameMenu {
 			repeatScoreLV.getSelectionModel().clearSelection();
 		});
 		
-		GridPane.setMargin(uniqueScoreBox, new Insets(10, 0, 0, 0));
-		GridPane.setMargin(repeatScoreBox, new Insets(10, 0, 0, 0));
-		
-		formPane.getChildren().addAll(uniqueScoreBox, repeatScoreLV);
-		GridPane.setConstraints(uniqueScoreBox, 0, 1);
+		formPane.getChildren().addAll(uniqueScoreLV, repeatScoreLV);
+		GridPane.setConstraints(uniqueScoreLV, 0, 1);
 		GridPane.setConstraints(repeatScoreLV, 1, 1);
 		
-		HBox uniqueScoreBtnBox = new HBox();
-		
-		Button addUniqueScoreBtn = new Button("Add");
-		Button removeUniqueScoreBtn = new Button("Remove");
-		uniqueScoreBtnBox.getChildren().addAll(addUniqueScoreBtn, removeUniqueScoreBtn);
-		
+		Button addUniqueScoreBtn = new Button("Add New");
 		Button addRepeatScoreBtn = new Button("Add New");
-		Button removeRepeatScoreBtn = new Button("Remove");
 				
 		addUniqueScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				
-				VBox uniqueItemBox = new VBox();
+				HBox uniqueItemBox = new HBox();
+				uniqueItemBox.setAlignment(Pos.CENTER_LEFT);
+				uniqueItemBox.setPadding(new Insets(5, 0, 5, 0));
+				
+				VBox uniqueItemFormBox = new VBox();
+				uniqueItemFormBox.setSpacing(5);
+				
 				HBox nameBox = new HBox();
 				nameBox.setAlignment(Pos.CENTER_LEFT);
 				
@@ -146,20 +148,24 @@ public class CreateGameMenu {
 				Spinner<Double> pointsSpinner = new Spinner<Double>(0, 50, 1, 0.5);
 				pointsBox.getChildren().addAll(pointsLabel, pointsSpinner);
 				
-				VBox.setMargin(pointsBox, new Insets(5, 0, 15, 0));
+				uniqueItemFormBox.getChildren().addAll(nameBox, pointsBox);
 				
-				uniqueItemBox.getChildren().addAll(nameBox, pointsBox);
-				uniqueScoreBox.getChildren().add(uniqueItemBox);
+				Button deleteBtn = new Button();
+				deleteBtn.setId("delete-item-button");
+				deleteBtn.setOnAction(new EventHandler<ActionEvent>() {
+					public void handle(ActionEvent e) {
+						uniqueScoreLV.getItems().remove(uniqueItemBox);
+					}
+				});
+				
+				HBox.setHgrow(uniqueItemFormBox, Priority.ALWAYS);
+				
+				uniqueItemBox.getChildren().addAll(uniqueItemFormBox, deleteBtn);
+				
+				uniqueScoreLV.getItems().add(uniqueItemBox);
 				
 				primaryStage.sizeToScene();
 				
-			}
-		});
-		
-		removeUniqueScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				uniqueScoreBox.getChildren().remove(uniqueScoreBox.getChildren().size()-1);
-				primaryStage.sizeToScene();
 			}
 		});
 		
@@ -204,22 +210,14 @@ public class CreateGameMenu {
 				
 				repeatScoreLV.getItems().add(repeatItemBox);
 				
-				primaryStage.sizeToScene();
+				primaryStage.sizeToScene(); //TODO Check if required
 				
 			}
 		});
+
+		formPane.getChildren().addAll(addUniqueScoreBtn, addRepeatScoreBtn);
 		
-		removeRepeatScoreBtn.setOnAction(new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				if(repeatScoreLV.getItems().size() != 0)
-					repeatScoreLV.getItems().remove(repeatScoreLV.getItems().size()-1);
-				primaryStage.sizeToScene();
-			}
-		});
-		
-		formPane.getChildren().addAll(uniqueScoreBtnBox, addRepeatScoreBtn);
-		
-		GridPane.setConstraints(uniqueScoreBtnBox, 0, 2);
+		GridPane.setConstraints(addUniqueScoreBtn, 0, 2);
 		GridPane.setConstraints(addRepeatScoreBtn, 1, 2);
 		
 		Button exitBtn = new Button("Back");
@@ -236,7 +234,7 @@ public class CreateGameMenu {
 		saveBtn.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				
-				String errorText = checkForInputErrors(nameTextField, uniqueScoreBox, repeatScoreBox);
+				String errorText = checkForInputErrors(nameTextField, uniqueScoreLV, repeatScoreLV);
 				if(errorText != "") {
 					showErrorDialog(errorText);
 					return;
@@ -244,26 +242,27 @@ public class CreateGameMenu {
 				
 				String gameName = nameTextField.getText();
 				int teamAmt = teamAmtSpinner.getValue();
+				int timeAmt = matchTimeField.getValue();
 				
-				String[] uniqueScoreStrs = new String[uniqueScoreBox.getChildren().size()];
-				double[] uniqueScorePtVals = new double[uniqueScoreBox.getChildren().size()];
+				String[] uniqueScoreStrs = new String[uniqueScoreLV.getItems().size()];
+				double[] uniqueScorePtVals = new double[uniqueScoreLV.getItems().size()];
 				
-				for(int i = 0;i < uniqueScoreBox.getChildren().size();i++) {
-					VBox scoreBox = (VBox) uniqueScoreBox.getChildren().get(i);
+				for(int i = 0;i < uniqueScoreLV.getItems().size();i++) {
+					VBox scoreBox = (VBox) ((HBox) uniqueScoreLV.getItems().get(i)).getChildren().get(0);
 					uniqueScoreStrs[i] = getFieldName(scoreBox);
 					uniqueScorePtVals[i] = getFieldPtVal(scoreBox);
 				}
 				
-				String[] repeatScoreStrs = new String[repeatScoreBox.getChildren().size()];
-				double[] repeatScorePtVals = new double[repeatScoreBox.getChildren().size()];
+				String[] repeatScoreStrs = new String[repeatScoreLV.getItems().size()];
+				double[] repeatScorePtVals = new double[repeatScoreLV.getItems().size()];
 				
-				for(int i = 0;i < repeatScoreBox.getChildren().size();i++) {
-					VBox scoreBox = (VBox) repeatScoreBox.getChildren().get(i);
+				for(int i = 0;i < repeatScoreLV.getItems().size();i++) {
+					VBox scoreBox = (VBox) ((HBox) repeatScoreLV.getItems().get(i)).getChildren().get(0);
 					repeatScoreStrs[i] = getFieldName(scoreBox);
 					repeatScorePtVals[i] = getFieldPtVal(scoreBox);
 				}
 				
-				String errorStr = Database.createGameType(gameName, teamAmt, 
+				String errorStr = Database.createGameType(gameName, teamAmt, timeAmt, 
 						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals);
 				
 				if(errorStr != "") {
@@ -297,21 +296,21 @@ public class CreateGameMenu {
 		
 	}
 	
-	public String checkForInputErrors(TextField nameTextField, VBox uniqueScoreBox, VBox repeatScoreBox) {
+	public String checkForInputErrors(TextField nameTextField, ListView<HBox> uniqueScoreLV, ListView<HBox> repeatScoreLV) {
 		if(nameTextField.getText().isEmpty())
 			return "The game requires a name (ex. Battle Royale).";
 		
-		else if(uniqueScoreBox.getChildren().size() == 0 && repeatScoreBox.getChildren().size() == 0)
+		else if(uniqueScoreLV.getItems().size() == 0 && repeatScoreLV.getItems().size() == 0)
 			return "The game requires at least one scoring field.";
 						
-		for(int i = 0;i < uniqueScoreBox.getChildren().size();i++) {
-			VBox scoreBox = (VBox) uniqueScoreBox.getChildren().get(i);
+		for(int i = 0;i < uniqueScoreLV.getItems().size();i++) {
+			VBox scoreBox = (VBox) ((HBox) uniqueScoreLV.getItems().get(i)).getChildren().get(0);
 			if(getFieldName(scoreBox).isEmpty())
 				return "All scoring fields require a valid name.";
 		}
 			
-		for(int i = 0;i < repeatScoreBox.getChildren().size();i++) {
-			VBox scoreBox = (VBox) repeatScoreBox.getChildren().get(i);
+		for(int i = 0;i < repeatScoreLV.getItems().size();i++) {
+			VBox scoreBox = (VBox) ((HBox) repeatScoreLV.getItems().get(i)).getChildren().get(0);
 			if(getFieldName(scoreBox).isEmpty())
 				return "All scoring fields require a valid name.";
 		}

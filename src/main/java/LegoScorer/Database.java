@@ -94,7 +94,7 @@ public class Database {
 		
 	}
 
-	public static String createGameType(String gameName, int teamAmt, 
+	public static String createGameType(String gameName, int teamAmt, int timeAmt, 
 			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals) {
 		
 		createGameFolder();
@@ -107,10 +107,11 @@ public class Database {
 			
 			BufferedWriter writer = new BufferedWriter(new FileWriter(gameFile));
 			
-			//File format: Start with game name and team amount
+			//File format: Start with game name, team amount, and time per game
 			//All values are separated by newlines, a char that cannot be inputted into any label (game name, score labels)
 			writer.write(gameName + "\n");
 			writer.write(teamAmt + "\n");
+			writer.write(timeAmt + "\n");
 			
 			//Use two lines for each scoring field, one for name and one for points
 			//Unique scoring elements start with "u "
@@ -173,6 +174,30 @@ public class Database {
 		
 		BufferedReader in = new BufferedReader(new FileReader(file));
 		if(in.readLine() == null) {
+			in.close();
+			return 0;
+		}
+		else if((str = in.readLine()) == null) {
+			in.close();
+			return 0;
+		}
+		else {
+			in.close();
+			return Integer.valueOf(str);
+		}
+		
+	}
+	
+	public static int getTimePerMatch(File file) throws IOException {
+		
+		String str;
+		
+		BufferedReader in = new BufferedReader(new FileReader(file));
+		if(in.readLine() == null) {
+			in.close();
+			return 0;
+		}
+		else if((str = in.readLine()) == null) {
 			in.close();
 			return 0;
 		}
@@ -312,7 +337,28 @@ public class Database {
 		String totalMatchCount = getTotalMatchCount(gameFile, teamFile, teamMatchCount);
 		if(totalMatchCount == "-1") return "-1";
 		
-		return "0";
+		int matchCountInt = Integer.valueOf(totalMatchCount);
+		int timePerMatch;
+		try {
+			timePerMatch = getTimePerMatch(gameFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		//TODO have TimeFields work on hr:min and min:sec
+		int totTimeMin = ((endTime - startTime) / 100 * 60) + ((endTime - startTime) % 100);
+		double timePerMatchMin = (timePerMatch / 100) + (timePerMatch % 100 / 60);
+
+		double breakTime = (totTimeMin - (matchCountInt * timePerMatchMin)) / (matchCountInt - 1);
+		if(breakTime < 0) return "ERROR";
+		
+		String breakTimeSec = "" + (int) ((breakTime % 1) * 60);
+		if(breakTimeSec.length() == 1) breakTimeSec = "0" + breakTimeSec;
+		
+		String breakTimeStr = ""  + (int) breakTime + ":" + breakTimeSec;
+
+		return breakTimeStr;
 		
 	}
 	
