@@ -1,0 +1,23 @@
+@font-face {
+	src: url("fonts/Ubuntu-R.ttf");
+}
+
+@font-face {
+	src: url("fonts/ITC_Franklin_Gothic-Medium.otf");
+}
+
+@font-face {
+	src: url("fonts/ITC_Franklin_Gothic-Book.otf");
+}
+
+.label {
+	-fx-font: 11pt "ITC Franklin Gothic Med";
+}
+
+#team-list-label {
+	-fx-font: 9pt "ITC Franklin Gothic Std Book";
+}
+
+#time-label {
+	-fx-font: 13pt "Ubuntu";
+}

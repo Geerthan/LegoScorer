@@ -1,5 +1,7 @@
 package LegoScorer;
 
+import java.io.File;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -9,7 +11,9 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
  * This class handles the creation of the main menu scene.
@@ -59,6 +63,22 @@ public class MainMenu {
 		createTournament.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(Main.createTournamentMenu.getScene());
+			}
+		});
+		
+		importTournament.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				
+				Database.createTournamentFolder();
+				
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setInitialDirectory(new File("src/main/resources/tournaments"));
+				fileChooser.getExtensionFilters().add(
+						new ExtensionFilter("Tournament Data Files", "*.tdat")
+				);
+				File tournamentFile = fileChooser.showOpenDialog(primaryStage);
+				
+				primaryStage.setScene(Main.tournamentView.getScene(tournamentFile));
 			}
 		});
 		

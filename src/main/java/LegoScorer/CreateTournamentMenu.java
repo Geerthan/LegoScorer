@@ -430,7 +430,7 @@ public class CreateTournamentMenu {
 				if(msg != "") showErrorDialog(msg);
 				else {
 					popupStage.hide();
-					primaryStage.setScene(Main.mainMenu.getScene());
+					primaryStage.setScene(Main.tournamentView.getScene(tournamentFile));
 				}
 			}
 		});

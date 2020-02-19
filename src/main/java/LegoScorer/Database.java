@@ -120,6 +120,9 @@ public class Database {
 				if(!teams.get(i).isBlank())
 					writer.write(teams.get(i) + "\n");
 			
+			//Amount of matches
+			writer.write(schedule.length + "\n");
+			
 			//Teams in match, in format: [time team1 team2 .. teamx] (for all teams) [field1 .. fieldx]
 			for(int i = 0;i < schedule.length;i++) {
 				for(int j = 0;j < schedule[i].length;j++)
@@ -407,6 +410,88 @@ public class Database {
 		String breakTimeStr = ""  + (int) breakTime + ":" + breakTimeSec;
 
 		return breakTimeStr;
+		
+	}
+	
+	public static int[][] getSchedule(File tournamentFile) throws IOException {
+		
+		int[][] errorSched = new int[0][0], schedule;
+		String str;
+		int amtMatches, teamsPerMatch;
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game title
+		if(in.readLine() == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		//Get teams per match
+		if((str = in.readLine()) == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		teamsPerMatch = Integer.valueOf(str);
+		
+		//Skip time per match
+		if(in.readLine() == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		//Skip through all game files
+		if((str = in.readLine()) == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		for(int i = 0;i < Integer.valueOf(str)*2;i++) {
+			if(in.readLine() == null) {
+				in.close();
+				return errorSched;
+			}
+		}
+		
+		//Skip through team list
+		if((str = in.readLine()) == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		for(int i = 0;i < Integer.valueOf(str);i++) {
+			if(in.readLine() == null) {
+				in.close();
+				return errorSched;
+			}
+		}
+		
+		//Read amount of matches
+		if((str = in.readLine()) == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		amtMatches = Integer.valueOf(str);
+		schedule = new int[amtMatches][teamsPerMatch+1];
+		String[] teamList;
+		
+		for(int i = 0;i < amtMatches;i++) {
+			
+			if((str = in.readLine()) == null) {
+				in.close();
+				return errorSched;
+			}
+			
+			teamList = str.split(" ");
+			for(int j = 0;j < teamsPerMatch+1;j++)
+				schedule[i][j] = Integer.valueOf(teamList[j]);
+			
+		}
+		
+		in.close();
+		return schedule;
 		
 	}
 	

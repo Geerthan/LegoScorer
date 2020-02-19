@@ -16,12 +16,14 @@ public class Main extends Application {
 	public static MainMenu mainMenu;
 	public static CreateTournamentMenu createTournamentMenu;
 	public static CreateGameMenu createGameMenu;
+	public static TournamentView tournamentView;
 	
 	public void start(Stage primaryStage) throws Exception {
 		
 		mainMenu = new MainMenu(primaryStage);
 		createTournamentMenu = new CreateTournamentMenu(primaryStage);
 		createGameMenu = new CreateGameMenu(primaryStage);
+		tournamentView = new TournamentView(primaryStage);
 		
 		primaryStage.setTitle("LegoScorer");
 //		primaryStage.setResizable(false);
