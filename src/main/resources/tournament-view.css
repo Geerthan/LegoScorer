@@ -42,3 +42,45 @@
 .spinner > .text-field {
 	-fx-alignment: center;
 }
+
+.button {
+	-fx-font: 12pt "ITC Franklin Gothic Med";
+	-fx-text-fill: #FFFFFF;
+	-fx-background-radius: 0;
+	-fx-background-insets: 0, 3, 0, 3;
+	-fx-background-color: #0077CA;
+	-fx-padding: 10, 0, 10, 0;
+	-fx-pref-width: 120px;
+	-fx-border-width: 2px;
+	-fx-border-color: #FFFFFF;
+}
+
+.button:hover {
+	-fx-text-fill: #D8DFE6;
+	-fx-background-color: #003C71;
+}
+
+#disabled-button {
+	-fx-background-color: #A7A8AA;
+}
+
+#disabled-button:hover {
+	-fx-text-fill: #FFFFFF;
+}
+
+#popup-button {
+	-fx-padding: 5, 55, 5, 55;
+	-fx-font-size: 9pt;
+	-fx-pref-width: -1;
+}
+
+#no-button {
+	-fx-padding: 5, 55, 5, 55;
+	-fx-font-size: 9pt;
+	-fx-pref-width: -1;
+	-fx-background-color: #E75D2A;
+}
+
+#no-button:hover {
+	-fx-background-color: #D12721;
+}
