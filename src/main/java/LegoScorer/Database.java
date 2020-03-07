@@ -3,14 +3,13 @@ package LegoScorer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.List;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -143,6 +142,57 @@ public class Database {
 		return "";
 		
 	}
+	
+	public static int[][] getScoreVals(File tournamentFile, int uniqueFieldAmt, int repeatFieldAmt, int teamAmt, int match) throws IOException {
+		
+		List<String> lines = Files.readAllLines(tournamentFile.toPath());
+		
+		int teamsPerMatch = getTeamsPerMatch(tournamentFile);
+		
+		int[][] scoreVals = new int[teamAmt][uniqueFieldAmt+repeatFieldAmt];
+		int lineNum = 3 + 1 + (uniqueFieldAmt + repeatFieldAmt)*2 + 1 + teamAmt + 1 + match;
+		String line = lines.get(lineNum);
+		
+		String[] tokens = line.split(" ");
+		
+		int activeTeam = 0, itemCnt = 0;
+		for(int i = teamsPerMatch+1;i < tokens.length;i++) {
+			scoreVals[activeTeam][itemCnt] = Integer.valueOf(tokens[i]);
+			
+			itemCnt++;
+			if(itemCnt == uniqueFieldAmt + repeatFieldAmt) {
+				itemCnt = 0;
+				activeTeam++;
+			}
+		}
+		
+		return scoreVals;
+		
+	}
+	
+	public static String replaceFileLine(File file, int line, String val) {
+		
+		List<String> lines;
+		
+		try {
+			lines = Files.readAllLines(file.toPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		lines.set(line, val);
+		
+		try {
+			Files.write(file.toPath(), lines);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		return "";
+		
+	}
 
 	public static String createGameType(String gameName, int teamAmt, int timeAmt, 
 			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals) {
@@ -214,8 +264,8 @@ public class Database {
 		return FXCollections.observableArrayList(getTeams(file));
 	}
 
-	public static int getTeamAmt(File file) throws IOException {
-		return getTeams(file).size();
+	public static int getTeamAmt(File teamFile) throws IOException {
+		return getTeams(teamFile).size();
 	}
 	
 	public static int getTeamsPerMatch(File file) throws IOException {
@@ -411,6 +461,24 @@ public class Database {
 		String breakTimeStr = ""  + (int) breakTime + ":" + breakTimeSec;
 
 		return breakTimeStr;
+		
+	}
+	
+	public static int getTournamentTeamAmt(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int fieldAmt = Integer.valueOf(in.readLine());
+		for(int i = 0;i < fieldAmt*2;i++)
+			in.readLine();
+		
+		int teamAmt = Integer.valueOf(in.readLine());
+		in.close();
+		return teamAmt;
 		
 	}
 	

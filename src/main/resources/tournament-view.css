@@ -52,7 +52,7 @@
 	-fx-padding: 10, 0, 10, 0;
 	-fx-pref-width: 120px;
 	-fx-border-width: 2px;
-	-fx-border-color: #FFFFFF;
+	-fx-border-color: transparent;
 }
 
 .button:hover {
@@ -60,12 +60,33 @@
 	-fx-background-color: #003C71;
 }
 
-#disabled-button {
+#disabled-header-button {
 	-fx-background-color: #A7A8AA;
+	-fx-pref-width: 130px;
+	-fx-padding: 5, 0, 5, 0;
 }
 
-#disabled-button:hover {
+#disabled-header-button:hover {
 	-fx-text-fill: #FFFFFF;
+}
+
+#orange-header-button {
+	-fx-background-color: #E75D2A;
+	-fx-pref-width: 130px;
+	-fx-padding: 5, 0, 5, 0;
+}
+
+#orange-header-button:hover {
+	-fx-background-color: #D12721;
+}
+
+#header-button {
+	-fx-pref-width: 130px;
+	-fx-padding: 5, 0, 5, 0;
+}
+
+#header-button:hover {
+	-fx-background-color: #005793;
 }
 
 #popup-button {

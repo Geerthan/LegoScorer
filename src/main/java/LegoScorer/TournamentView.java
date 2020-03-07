@@ -8,7 +8,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -17,7 +17,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Spinner;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -32,10 +31,13 @@ import javafx.stage.Stage;
 
 public class TournamentView {
 	
+	File tournamentFile;
 	Stage primaryStage, popupStage;
-	int[][] schedule;
+	int[][] schedule, scoreVals;
 	String[] uniqueScoreFields, repeatScoreFields;
+	int teamAmt;
 	GridPane scorePane;
+	Button playoffsButton, saveButton;
 	
 	boolean unsaved;
 	
@@ -44,6 +46,8 @@ public class TournamentView {
 	}
 	
 	public Scene getScene(File tournamentFile) {
+		
+		this.tournamentFile = tournamentFile;
 		
 		VBox root = new VBox();
 		
@@ -57,7 +61,19 @@ public class TournamentView {
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);
 		
-		topStack.getChildren().addAll(topRect, logoView);
+		HBox headerButtonBox = new HBox();
+		headerButtonBox.setAlignment(Pos.CENTER_RIGHT);
+		headerButtonBox.setSpacing(5);
+		
+		playoffsButton = new Button("Playoffs Mode");
+		playoffsButton.setId("orange-header-button");
+		
+		saveButton = new Button("Save");
+		
+		headerButtonBox.getChildren().addAll(playoffsButton, saveButton);
+		
+		StackPane.setMargin(headerButtonBox, new Insets(0, 20, 0, 0));
+		topStack.getChildren().addAll(topRect, logoView, headerButtonBox);
 		
 		root.getChildren().add(topStack);
 		
@@ -82,6 +98,21 @@ public class TournamentView {
 		} catch (IOException e) {
 			e.printStackTrace();
 			repeatScoreFields = new String[0];
+		}
+		
+		try {
+			teamAmt = Database.getTournamentTeamAmt(tournamentFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			teamAmt = 0;
+			//TODO Show error msg!
+		}
+		
+		try {
+			scoreVals = Database.getScoreVals(tournamentFile, uniqueScoreFields.length, repeatScoreFields.length, teamAmt, 0);
+		} catch (IOException e) {
+			e.printStackTrace();
+			scoreVals = new int[0][0];
 		}
 		
 		ListView<HBox> gameLV = new ListView<HBox>();
@@ -126,27 +157,34 @@ public class TournamentView {
 		scorePane.setAlignment(Pos.TOP_CENTER);
 		scorePane.setHgap(25);
 		scorePane.setVgap(10);
-		scorePane = updateScorePane(scorePane, schedule, uniqueScoreFields, repeatScoreFields, 0);
+		scorePane = updateScorePane(schedule, uniqueScoreFields, repeatScoreFields, scoreVals, 0);
 		
 		gameLV.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
 			if(unsaved)
-				showSaveDialog(scorePane, schedule, uniqueScoreFields, repeatScoreFields, (int) newValue);
+				showSaveDialog(schedule, uniqueScoreFields, repeatScoreFields, scoreVals, (int) newValue, (int) oldValue);
 			else
-				scorePane = updateScorePane(scorePane, schedule, uniqueScoreFields, repeatScoreFields, (int) newValue);
+				scorePane = updateScorePane(schedule, uniqueScoreFields, repeatScoreFields, scoreVals, (int) newValue);
 		});
 		
 		viewBox.getChildren().addAll(gameLV, scorePane);
 		
 		root.getChildren().add(viewBox);
 		
-		// TODO make resizable
+		// TODO Make resizable
 		Scene s = new Scene(root, 1000, 600);
 		s.getStylesheets().add("tournament-view.css");
 		return s;
 		
 	}
 	
-	public GridPane updateScorePane(GridPane scorePane, int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int match) {
+	public GridPane updateScorePane(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int[][] scoreVals, int match) {
+		
+		try {
+			scoreVals = Database.getScoreVals(tournamentFile, uniqueScoreFields.length, repeatScoreFields.length, teamAmt, match);
+		} catch (IOException e) {
+			e.printStackTrace();
+			scoreVals = new int[0][0];
+		}
 		
 		unsaved = false;
 		
@@ -163,19 +201,23 @@ public class TournamentView {
 			scorePane.getColumnConstraints().add(scoreCol);
 		}
 		
-		Button saveButton = new Button("Save");
-		saveButton.setId("disabled-button");
+		playoffsButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				//TODO Show prompt
+				
+			}
+		});
+		
+		saveButton.setId("disabled-header-button");
 		
 		saveButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				if(!unsaved) return;
 				unsaved = false;
-				saveButton.setId("disabled-button");
-				//TODO handle saving
+				saveButton.setId("disabled-header-button");
+				save(schedule, uniqueScoreFields, repeatScoreFields, match);
 			}
 		});
-		
-		scorePane.add(saveButton, schedule[match].length-2, 0, 3, 1);
 		
 		Label titleLabel = new Label("Game " + (match+1));
 		titleLabel.setId("title-label");
@@ -191,10 +233,11 @@ public class TournamentView {
 			scorePane.add(scoreLabel, 0, i+2);
 			for(int j = 1;j < schedule[match].length;j++) {
 				CheckBox c = new CheckBox();
+				if(scoreVals[j-1][i] == 1) c.setSelected(true);
 				c.setOnAction(new EventHandler<ActionEvent>() {
 					public void handle(ActionEvent e) {
 						unsaved = true;
-						saveButton.setId("");
+						saveButton.setId("header-button");
 					}
 				});
 				scorePane.add(c, j, i+2);
@@ -206,6 +249,7 @@ public class TournamentView {
 			scorePane.add(scoreLabel, 0, uniqueScoreFields.length+i+2);
 			for(int j = 1;j < schedule[match].length;j++) {
 				Spinner<Integer> s = new Spinner<Integer>(0, 999, 0);
+				s.getValueFactory().setValue(scoreVals[j-1][uniqueScoreFields.length+i]);
 				s.valueProperty().addListener((obs, oldValue, newValue) -> {
 					unsaved = true;
 					saveButton.setId("");
@@ -218,7 +262,7 @@ public class TournamentView {
 		return scorePane;
 	}
 
-	public void showSaveDialog(GridPane scorePane2, int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int match) {
+	public void showSaveDialog(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int[][] scoreVals, int match, int oldMatch) {
 		VBox root = new VBox();
 		root.setPadding(new Insets(15));
 		root.setAlignment(Pos.CENTER);
@@ -233,7 +277,7 @@ public class TournamentView {
 		noButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				popupStage.hide();
-				scorePane = updateScorePane(scorePane2, schedule, uniqueScoreFields, repeatScoreFields, match);
+				scorePane = updateScorePane(schedule, uniqueScoreFields, repeatScoreFields, scoreVals, match);
 			}
 		});
 		
@@ -242,9 +286,9 @@ public class TournamentView {
 		
 		saveButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				// TODO handle saving
+				save(schedule, uniqueScoreFields, repeatScoreFields, oldMatch);
 				popupStage.hide();
-				scorePane = updateScorePane(scorePane2, schedule, uniqueScoreFields, repeatScoreFields, match);
+				scorePane = updateScorePane(schedule, uniqueScoreFields, repeatScoreFields, scoreVals, match);
 			}
 		});
 		
@@ -262,6 +306,56 @@ public class TournamentView {
 		popupStage.initOwner(primaryStage);
 		popupStage.initModality(Modality.WINDOW_MODAL);
 		popupStage.show();
+	}
+	
+	// TODO Show string error
+	public void save(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int match) {
+		
+		int lineAmt = 3 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + match;
+		
+		String lineVal = "";
+		for(int i = 0;i < schedule[match].length;i++)
+			lineVal += schedule[match][i] + " ";
+		
+		int[] scoreVals;
+		
+		for(int i = 1;i < schedule[match].length;i++) {
+			scoreVals = getScoreVals(i, uniqueScoreFields.length, repeatScoreFields.length);
+			for(int j = 0;j < scoreVals.length;j++)
+				lineVal += scoreVals[j] + " ";
+		}
+		
+		String msg = Database.replaceFileLine(tournamentFile, lineAmt, lineVal);
+		if(msg != "") {
+			//TODO Show error message
+		}
+		
+	}
+	
+	private int[] getScoreVals(int col, int uniqueCnt, int repeatCnt) {
+		
+		int[] vals = new int[uniqueCnt + repeatCnt];
+		Node n;
+		CheckBox c;
+		Spinner<Integer> s;
+		
+		for(int i = 0;i < scorePane.getChildren().size();i++) {
+			n = scorePane.getChildren().get(i);
+			if(GridPane.getColumnIndex(n) == col && GridPane.getRowIndex(n) != 0) {
+				if(GridPane.getRowIndex(n)-1 > uniqueCnt) {
+					s = (Spinner<Integer>) n;
+					vals[GridPane.getRowIndex(n)-2] = s.getValue();
+				}
+				else if(GridPane.getRowIndex(n) > 1) {
+					c = (CheckBox) n;
+					if(c.isSelected())
+						vals[GridPane.getRowIndex(n)-2] = 1;
+					else vals[GridPane.getRowIndex(n)-2] = 0;
+				}
+			}
+		}
+		
+		return vals;
 	}
 	
 }
