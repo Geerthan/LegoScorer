@@ -72,7 +72,7 @@ public class MainMenu {
 				Database.createTournamentFolder();
 				
 				FileChooser fileChooser = new FileChooser();
-				fileChooser.setInitialDirectory(new File("src/main/resources/tournaments"));
+				fileChooser.setInitialDirectory(new File("../resources/tournaments"));
 				fileChooser.getExtensionFilters().add(
 						new ExtensionFilter("Tournament Data Files", "*.tdat")
 				);

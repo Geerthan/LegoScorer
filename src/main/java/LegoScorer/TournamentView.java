@@ -1,7 +1,10 @@
 package LegoScorer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -47,6 +50,14 @@ public class TournamentView {
 	
 	public Scene getScene(File tournamentFile) {
 		
+		FileInputStream logoInputStream = null;
+		
+		try {
+			logoInputStream = new FileInputStream("../resources/img/otu_dark.png");
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
 		this.tournamentFile = tournamentFile;
 		
 		VBox root = new VBox();
@@ -56,7 +67,7 @@ public class TournamentView {
 		Rectangle topRect = new Rectangle(1000, 50, Color.web("#003C71"));
 		topRect.widthProperty().bind(primaryStage.widthProperty());
 		
-		Image logo = new Image("img/otu_dark.png");
+		Image logo = new Image(logoInputStream);
 		ImageView logoView = new ImageView(logo);
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);

@@ -1,5 +1,8 @@
 package LegoScorer;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -35,6 +38,14 @@ public class CreateGameMenu {
 	
 	public Scene getScene() {
 		
+		FileInputStream logoInputStream = null;
+		
+		try {
+			logoInputStream = new FileInputStream("../resources/img/otu_dark.png");
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
 		VBox root = new VBox();
 		root.setMaxWidth(700);
 		
@@ -42,7 +53,7 @@ public class CreateGameMenu {
 		
 		Rectangle topRect = new Rectangle(700, 50, Color.web("#003C71"));
 		
-		Image logo = new Image("img/otu_dark.png");
+		Image logo = new Image(logoInputStream);
 		ImageView logoView = new ImageView(logo);
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);

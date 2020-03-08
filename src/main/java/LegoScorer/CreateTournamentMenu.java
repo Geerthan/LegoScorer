@@ -1,6 +1,8 @@
 package LegoScorer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javafx.event.ActionEvent;
@@ -56,6 +58,14 @@ public class CreateTournamentMenu {
 	
 	public Scene getScene() {
 		
+		FileInputStream logoInputStream = null;
+		
+		try {
+			logoInputStream = new FileInputStream("../resources/img/otu_dark.png");
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
 		//Find better solution for initialization
 		gameFile = null; teamFile = null; tournamentFile = null;
 		
@@ -65,7 +75,7 @@ public class CreateTournamentMenu {
 		
 		Rectangle topRect = new Rectangle(500, 50, Color.web("#003C71"));
 		
-		Image logo = new Image("img/otu_dark.png");
+		Image logo = new Image(logoInputStream);
 		ImageView logoView = new ImageView(logo);
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);
@@ -205,7 +215,7 @@ public class CreateTournamentMenu {
 		Database.createGameFolder();
 		
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setInitialDirectory(new File("src/main/resources/games"));
+		fileChooser.setInitialDirectory(new File("../resources/games"));
 		fileChooser.getExtensionFilters().add(
 				new ExtensionFilter("Game Data Files", "*.gdat")
 		);
@@ -219,7 +229,7 @@ public class CreateTournamentMenu {
 		Database.createTournamentFolder();
 		
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setInitialDirectory(new File("src/main/resources/tournaments"));
+		fileChooser.setInitialDirectory(new File("../resources/tournaments"));
 		fileChooser.getExtensionFilters().add(
 			new ExtensionFilter("Tournament Data Files", "*.tdat")
 		);

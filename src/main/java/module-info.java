@@ -1,4 +1,4 @@
-module GraphicsModule {
+module LegoScorer {
 	
 	requires java.base;
 	requires javafx.base;

@@ -17,7 +17,7 @@ public class Database {
 	
 	public static void createGameFolder() {
 		
-		File gameDir = new File("src/main/resources/games");
+		File gameDir = new File("../resources/games");
 		
 		if(!gameDir.exists())
 			gameDir.mkdir();
@@ -26,7 +26,7 @@ public class Database {
 	
 	public static void createTournamentFolder() {
 		
-		File tournamentDir = new File("src/main/resources/tournaments");
+		File tournamentDir = new File("../resources/tournaments");
 		
 		if(!tournamentDir.exists())
 			tournamentDir.mkdir();
@@ -199,7 +199,7 @@ public class Database {
 		
 		createGameFolder();
 		
-		File gameFile = new File("src/main/resources/games/" + gameName + ".gdat");
+		File gameFile = new File("../resources/games/" + gameName + ".gdat");
 		if(gameFile.exists())
 			return "A game type with this name already exists, please choose a unique name.";
 		
