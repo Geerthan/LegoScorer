@@ -9,7 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.TreeMap;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -625,6 +628,38 @@ public class Database {
 		return scoreVals;
 	}
 	
+	public static double[][] getSortedQualsRankings(File tournamentFile) throws IOException {
+		int[][] schedule = getSchedule(tournamentFile);
+		double[] uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
+		double[] repeatScorePtVals = getRepeatScorePtVals(tournamentFile);
+		int teamAmt = getTournamentTeamAmt(tournamentFile);
+		double[] teamScores = new double[teamAmt];
+		double curScore;
+		int[][] scoreVals;
+		
+		for(int i = 0;i < teamAmt;i++)
+			teamScores[i] = 0;
+		
+		for(int i = 0;i < schedule.length;i++) {
+			scoreVals = getScoreVals(tournamentFile, uniqueScorePtVals.length, repeatScorePtVals.length, teamAmt, i);
+			for(int j = 1;j < schedule[i].length;j++) {
+				curScore = 0;
+				for(int k = 0;k < uniqueScorePtVals.length;k++) curScore += scoreVals[j-1][k] * uniqueScorePtVals[k];
+				for(int k = 0;k < repeatScorePtVals.length;k++) curScore += scoreVals[j-1][uniqueScorePtVals.length + k] * repeatScorePtVals[k];
+				teamScores[schedule[i][j]-1] += curScore;
+			}
+		}
+		
+		double[][] rankings = new double[teamAmt][2];
+		for(int i = 0;i < teamAmt;i++) {
+			rankings[i][0] = i+1;
+			rankings[i][1] = teamScores[i];
+		}
+		
+		Arrays.sort(rankings, Comparator.comparingDouble(r -> r[1]));
+		return rankings;
+	}
+	
 	public static int getQualsMatchCnt(File tournamentFile) throws IOException {
 
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
@@ -985,7 +1020,6 @@ public class Database {
 	}
 	
 	public static String[] getUniqueScoreFields(File tournamentFile) throws IOException {
-		
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
@@ -1016,7 +1050,6 @@ public class Database {
 	}
 	
 	public static String[] getRepeatScoreFields(File tournamentFile) throws IOException {
-		
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
@@ -1044,6 +1077,68 @@ public class Database {
 		
 		in.close();
 		return repeatScoreFields;
+	}
+	
+	public static double[] getUniqueScorePtVals(File tournamentFile) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int fields = Integer.valueOf(in.readLine());
+		int uniqueFields = 0;
+		int counter = 0;
+		
+		String[] fieldLines = new String[fields];
+		double[] ptLines = new double[fields];
+		for(int i = 0;i < fields;i++) {
+			fieldLines[i] = in.readLine();
+			ptLines[i] = Double.valueOf(in.readLine()); // Score value multiplier
+			if(fieldLines[i].charAt(0) == 'u') uniqueFields++;
+		}
+		
+		double[] uniqueScorePtVals = new double[uniqueFields];
+		for(int i = 0;i < fields;i++) {
+			if(fieldLines[i].charAt(0) == 'u') {
+				uniqueScorePtVals[counter] = ptLines[i];
+				counter++;
+			}
+		}
+		
+		in.close();
+		return uniqueScorePtVals;
+	}
+	
+	public static double[] getRepeatScorePtVals(File tournamentFile) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int fields = Integer.valueOf(in.readLine());
+		int repeatFields = 0;
+		int counter = 0;
+		
+		String[] fieldLines = new String[fields];
+		double[] ptLines = new double[fields];
+		for(int i = 0;i < fields;i++) {
+			fieldLines[i] = in.readLine();
+			ptLines[i] = Double.valueOf(in.readLine()); // Score value multiplier
+			if(fieldLines[i].charAt(0) == 'r') repeatFields++;
+		}
+		
+		double[] repeatScorePtVals = new double[repeatFields];
+		for(int i = 0;i < fields;i++) {
+			if(fieldLines[i].charAt(0) == 'r') {
+				repeatScorePtVals[counter] = ptLines[i];
+				counter++;
+			}
+		}
+		
+		in.close();
+		return repeatScorePtVals;
 	}
 	
 	public static int[][] getSchedule(File tournamentFile) throws IOException {

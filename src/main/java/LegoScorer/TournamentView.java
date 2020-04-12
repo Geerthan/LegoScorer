@@ -488,8 +488,7 @@ public class TournamentView {
 		String msg = Database.replaceFileLine(tournamentFile, lineAmt, lineVal);
 		if(msg != "") {
 			//TODO Show error message
-		}
-		
+		}		
 	}
 	
 	private int[] getScoreVals(int col, int uniqueCnt, int repeatCnt) {
