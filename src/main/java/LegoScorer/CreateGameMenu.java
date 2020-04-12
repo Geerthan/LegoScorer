@@ -14,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
@@ -27,6 +28,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class CreateGameMenu {
 	
@@ -38,13 +40,7 @@ public class CreateGameMenu {
 	
 	public Scene getScene() {
 		
-		FileInputStream logoInputStream = null;
-		
-		try {
-			logoInputStream = new FileInputStream("../resources/img/otu_dark.png");
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+		String os = System.getProperty("os.name").substring(0, 7);
 		
 		VBox root = new VBox();
 		root.setMaxWidth(700);
@@ -53,7 +49,7 @@ public class CreateGameMenu {
 		
 		Rectangle topRect = new Rectangle(700, 50, Color.web("#003C71"));
 		
-		Image logo = new Image(logoInputStream);
+		Image logo = new Image(getClass().getResource("/img/otu_dark.png").toExternalForm().toString());
 		ImageView logoView = new ImageView(logo);
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);
@@ -100,15 +96,59 @@ public class CreateGameMenu {
 		formPane.setPadding(new Insets(0, 20, 10, 20));
 		formPane.setHgap(15);
 		
+		HBox uniqueScoreTitle = new HBox();
+		HBox repeatScoreTitle = new HBox();
+		
+		uniqueScoreTitle.setAlignment(Pos.CENTER);
+		repeatScoreTitle.setAlignment(Pos.CENTER);
+		
 		Label uniqueScoreLabel = new Label("Unique Scoring Fields");
 		Label repeatScoreLabel = new Label("Repeatable Scoring Fields");
 		
-		GridPane.setMargin(uniqueScoreLabel, new Insets(10, 0, 0, 0));
-		GridPane.setMargin(repeatScoreLabel, new Insets(10, 0, 0, 0));
+		uniqueScoreTitle.getChildren().add(uniqueScoreLabel);
+		repeatScoreTitle.getChildren().add(repeatScoreLabel);
 		
-		formPane.getChildren().addAll(uniqueScoreLabel, repeatScoreLabel);
-		GridPane.setConstraints(uniqueScoreLabel, 0, 0);
-		GridPane.setConstraints(repeatScoreLabel, 1, 0);
+		ImageView uniqueHelpImg = new ImageView();
+		uniqueHelpImg.setId("help-img");
+		uniqueHelpImg.setPreserveRatio(true);
+		uniqueHelpImg.setPickOnBounds(true);
+		uniqueHelpImg.setFitHeight(30);
+		
+		ImageView repeatHelpImg = new ImageView();
+		repeatHelpImg.setId("help-img");
+		repeatHelpImg.setPreserveRatio(true);
+		repeatHelpImg.setPickOnBounds(true);
+		repeatHelpImg.setFitHeight(30);
+		
+		Tooltip uniqueTip = new Tooltip("Represents a scoring method that can only happen once per team (or total). "
+				+ "For example, placing 1st or 2nd is unique, and would count as a unique scoring field.");
+		uniqueTip.setShowDelay(Duration.ZERO);
+		uniqueTip.setHideDelay(Duration.ZERO);
+		uniqueTip.setPrefWidth(350);
+		uniqueTip.setWrapText(true);
+		Tooltip.install(uniqueHelpImg, uniqueTip);
+		
+		Tooltip repeatTip = new Tooltip("Represents a repeatable scoring method. For example, scoring basketballs "
+				+ "into a basket is a repeatable scoring method.");
+		repeatTip.setShowDelay(Duration.ZERO);
+		repeatTip.setHideDelay(Duration.ZERO);
+		repeatTip.setPrefWidth(350);
+		repeatTip.setWrapText(true);
+		Tooltip.install(repeatHelpImg, repeatTip);
+		
+		
+		HBox.setMargin(uniqueHelpImg, new Insets(0, 0, 0, 10));
+		HBox.setMargin(repeatHelpImg, new Insets(0, 0, 0, 10));
+		
+		uniqueScoreTitle.getChildren().add(uniqueHelpImg);
+		repeatScoreTitle.getChildren().add(repeatHelpImg);
+		
+		GridPane.setMargin(uniqueScoreTitle, new Insets(10, 0, 0, 0));
+		GridPane.setMargin(repeatScoreTitle, new Insets(10, 0, 0, 0));
+		
+		formPane.getChildren().addAll(uniqueScoreTitle, repeatScoreTitle);
+		GridPane.setConstraints(uniqueScoreTitle, 0, 0);
+		GridPane.setConstraints(repeatScoreTitle, 1, 0);
 		
 		ListView<HBox> uniqueScoreLV = new ListView<HBox>();
 		uniqueScoreLV.setPrefHeight(250);
@@ -272,8 +312,10 @@ public class CreateGameMenu {
 					repeatScorePtVals[i] = getFieldPtVal(scoreBox);
 				}
 				
+				Database.createGameFolder(os);
+				
 				String errorStr = Database.createGameType(gameName, teamAmt, timeAmt, 
-						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals);
+						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals, os);
 				
 				if(errorStr != "") {
 					showErrorDialog(errorStr);

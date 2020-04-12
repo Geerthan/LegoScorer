@@ -16,24 +16,43 @@ repositories {
 jar {
 	manifest {
 		//attributes "Class-Path": "/libs/*"
-		attributes "Main-Class": "LegoScorer.Main"
+		attributes 'Main-Class': 'LegoScorer.Main'
 	}
 }
+
+/*sourceSets {
+	main {
+		resources {
+			srcDirs 'src/main/resources'
+		}
+	}
+}*/
 
 
 def JLINK_DIR = "$buildDir/image"
 
-jlink {
-	launcher {
-		name = "LegoScorer"
+tasks.jlink.doLast {
+	copy {
+		from('/src/main/resources')
+		into JLINK_DIR + '/resources'
 	}
 }
 
-tasks.jlink.doLast {
-	copy {
-		from("/src/main/resources")
-		into JLINK_DIR + "/resources"
+jlink {
+	launcher {
+		name = 'LegoScorer'
 	}
+	
+	jpackage {
+		jpackageHome = 'C:/Program Files/Java/jdk-14'
+		//jpackageHome = 'C:/Users/geert/Documents/School/Work/Java/jdks/mac-jdk-14'
+		//targetPlatformName = 'mac'
+		//installerType = "dmg"
+		//installerOptions = ['--installer-type pkg']
+		//installerOptions = ['--win-shortcut', '--win-menu']
+		//options = ['--exclude-resources=src/main/resources']
+	}
+	
 }
 
 dependencies {
@@ -41,7 +60,7 @@ dependencies {
 
 run {
 	if(javafx.platform.classifier == 'win') {
-		systemProperty "java.library.path", "C:\tmp"
+		systemProperty 'java.library.path', 'C:\tmp'
 	}
 }
 

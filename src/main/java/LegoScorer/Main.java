@@ -1,5 +1,8 @@
 package LegoScorer;
 
+import java.io.File;
+import java.nio.file.Paths;
+
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -17,6 +20,7 @@ public class Main extends Application {
 	public static CreateTournamentMenu createTournamentMenu;
 	public static CreateGameMenu createGameMenu;
 	public static TournamentView tournamentView;
+	public static PlayoffsView playoffsView;
 	
 	public void start(Stage primaryStage) throws Exception {
 		
@@ -24,9 +28,10 @@ public class Main extends Application {
 		createTournamentMenu = new CreateTournamentMenu(primaryStage);
 		createGameMenu = new CreateGameMenu(primaryStage);
 		tournamentView = new TournamentView(primaryStage);
+		playoffsView = new PlayoffsView(primaryStage);
 		
 		primaryStage.setTitle("LegoScorer");
-//		primaryStage.setResizable(false);
+		primaryStage.setResizable(false);
 		primaryStage.setScene(mainMenu.getScene());
 		primaryStage.show();
 		

@@ -32,6 +32,8 @@ public class MainMenu {
 	
 	public Scene getScene() {
 		
+		String os = System.getProperty("os.name").substring(0, 7);
+		
 		VBox root = new VBox(); //Main container of scene
 		root.alignmentProperty().set(Pos.CENTER);
 		
@@ -69,10 +71,17 @@ public class MainMenu {
 		importTournament.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				
-				Database.createTournamentFolder();
+				Database.createTournamentFolder(os);
 				
 				FileChooser fileChooser = new FileChooser();
-				fileChooser.setInitialDirectory(new File("../resources/tournaments"));
+				
+				if(os == "Windows")
+					fileChooser.setInitialDirectory(new File("runtime/resources/tournaments"));
+				else {
+					fileChooser.setInitialDirectory(new File(System.getProperty("user.home") + File.separator + "Documents" 
+														+ File.separator + "LegoScorer" + File.separator + "tournaments"));
+				}
+				
 				fileChooser.getExtensionFilters().add(
 						new ExtensionFilter("Tournament Data Files", "*.tdat")
 				);

@@ -32,6 +32,14 @@
 	-fx-background-color: #003C71;
 }
 
+#help-img {
+	-fx-image: url('img/google_mat_help.png');
+}
+
+#help-img:hover {
+	-fx-image: url('img/google_mat_help_hover.png');
+}
+
 #delete-item-button {
 	-fx-pref-width: 30px;
 	-fx-pref-height: 30px;

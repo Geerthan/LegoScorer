@@ -3,6 +3,7 @@ package LegoScorer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,18 +16,45 @@ import javafx.collections.ObservableList;
 
 public class Database {
 	
-	public static void createGameFolder() {
+	public static void createMacDir() {
 		
-		File gameDir = new File("../resources/games");
+		File macDir = new File(System.getProperty("user.home") + File.separator + "Documents" + File.separator + "LegoScorer");
+		
+		if(!macDir.exists())
+			macDir.mkdir();
+		
+	}
+	
+	public static void createGameFolder(String os) {
+		
+		File gameDir;
+		
+		if(os == "Windows")
+			gameDir = new File("runtime/resources/games");
+		else {
+			createMacDir();
+			gameDir = new File(System.getProperty("user.home") + File.separator + "Documents" + File.separator + "LegoScorer" 
+										+ File.separator + "games");
+		}
+		
 		
 		if(!gameDir.exists())
 			gameDir.mkdir();
 		
 	}
 	
-	public static void createTournamentFolder() {
+	public static void createTournamentFolder(String os) {
 		
-		File tournamentDir = new File("../resources/tournaments");
+		File tournamentDir;
+		
+		if(os == "Windows")
+			tournamentDir = new File("runtime/resources/tournaments");
+		else {
+			createMacDir();
+			tournamentDir = new File(System.getProperty("user.home") + File.separator + "Documents" + File.separator + "LegoScorer" 
+										+ File.separator + "tournaments");
+		}
+			
 		
 		if(!tournamentDir.exists())
 			tournamentDir.mkdir();
@@ -143,6 +171,219 @@ public class Database {
 		
 	}
 	
+	public static String genElimsSchedule(File tournamentFile, int[] matchRoundCnts, int[] teamRoundCnts, int[] tpmCnts) throws IOException {
+		
+		int startRnd = 0;
+		
+		// Set starting round to first "playable" round
+		for(int i = 0;i < 2;i++) {
+			if(matchRoundCnts[i] == 0) startRnd++;
+			else break;
+		}
+		
+		FileWriter fileWriter = new FileWriter(tournamentFile, true);
+		
+		//Total match cnt, team cnt, and teams per match
+		for(int i = startRnd;i < 3;i++) fileWriter.write("" + matchRoundCnts[i] + " ");
+		fileWriter.write("\n");
+		
+		for(int i = startRnd;i < 3;i++) fileWriter.write("" + teamRoundCnts[i] + " ");
+		fileWriter.write("\n");
+		
+		for(int i = startRnd;i < 3;i++) fileWriter.write("" + tpmCnts[i] + " ");
+		fileWriter.write("\n");
+		
+		//Amount of currently played rounds
+		fileWriter.write("0\n");
+		
+		fileWriter.close();
+		
+		return genPlayoffRound(tournamentFile, startRnd);
+	}
+	
+	public static String genPlayoffRound(File tournamentFile, int rnd) {
+		
+		int[] matchRoundCnts;
+		int[] teamRoundCnts;
+		
+		try {
+			matchRoundCnts = getMatchRoundCnts(tournamentFile);
+			teamRoundCnts = getTeamRoundCnts(tournamentFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		int scoringFields;
+		
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+			
+			//Skip game data
+			for(int i = 0;i < 3;i++)
+				in.readLine();
+			
+			//Get amt of scoring fields
+			scoringFields = Integer.valueOf(in.readLine());
+			
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		//Balanced ranking gen (ex. for teams 1-8, matchmake 1-8-2-7, 3-6-4-5 instead of 1-2-3-4, 5-6-7-8)
+		int curRoundTeams = matchRoundCnts[rnd] * teamRoundCnts[rnd];
+		int[] roundSeeds = new int[matchRoundCnts[rnd] * teamRoundCnts[rnd]];
+		
+		int lo = 1, hi = curRoundTeams;
+		boolean toggle = false;
+			
+		for(int i = 0;i < curRoundTeams;i++) {
+			if(!toggle) {
+				roundSeeds[i] = lo;
+				lo++;
+				toggle = true;
+			}
+			else {
+				roundSeeds[i] = hi;
+				hi--;
+				toggle = false;
+			}
+		}
+		
+		FileWriter fileWriter;
+		
+		try {
+			fileWriter = new FileWriter(tournamentFile, true);
+			
+			for(int j = 0;j < matchRoundCnts[rnd];j++) {
+				
+				//Team data
+				for(int k = 0;k < teamRoundCnts[rnd];k++) {
+					fileWriter.write("" + roundSeeds[teamRoundCnts[rnd]*j + k] + " ");
+				}
+				
+				//Game data
+				for(int l = 0;l < scoringFields * teamRoundCnts[rnd];l++)
+					fileWriter.write("0 ");
+				
+				fileWriter.write("\n");
+			}
+			
+			fileWriter.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		return "";
+	}
+	
+	public static int[] getMatchRoundCnts(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip scoring elements
+		int lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip team names
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip quals matches
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		String[] tokens = in.readLine().split(" ");
+		in.close();
+		
+		int[] matchRoundCnts = new int[tokens.length];
+		for(int i = 0;i < tokens.length;i++) {
+			matchRoundCnts[i] = Integer.valueOf(tokens[i]);
+		}
+		
+		return matchRoundCnts;
+	}
+	
+	public static int[] getTeamRoundCnts(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip scoring elements
+		int lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip team names
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip quals matches
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		in.readLine();
+		
+		String[] tokens = in.readLine().split(" ");
+		in.close();
+		
+		int[] teamRoundCnts = new int[tokens.length];
+		for(int i = 0;i < tokens.length;i++) {
+			teamRoundCnts[i] = Integer.valueOf(tokens[i]);
+		}
+		
+		return teamRoundCnts;
+	}
+	
+	public static boolean hasPlayoffs(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Ignore game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		int lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		boolean ans = in.readLine() != null;
+		in.close();
+		
+		return ans;
+		
+	}
+	
 	public static int[][] getScoreVals(File tournamentFile, int uniqueFieldAmt, int repeatFieldAmt, int teamAmt, int match) throws IOException {
 		
 		List<String> lines = Files.readAllLines(tournamentFile.toPath());
@@ -167,6 +408,149 @@ public class Database {
 		}
 		
 		return scoreVals;
+		
+	}
+	
+	public static int[][] getPlayoffsSchedule(File tournamentFile, int rnd) throws IOException {
+		
+		int[] matchCnt = getMatchRoundCnts(tournamentFile);
+		int[] teamCnt = getTeamRoundCnts(tournamentFile);
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		int lines;
+		String[] tokens;
+		int[][] schedule = new int[matchCnt[rnd]][teamCnt[rnd]];
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip game field info
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip team list
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip quals matches
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip match and team count info, and amt of played rounds
+		in.readLine();
+		in.readLine();
+		in.readLine();
+		
+		//Skip any full rounds before current round
+		for(int i = 0;i < rnd;i++) {
+			for(int j = 0;j < matchCnt[i];j++)
+				in.readLine();
+		}
+		
+		for(int i = 0;i < matchCnt[rnd];i++) {
+			tokens = in.readLine().split(" ");
+			for(int j = 0;j < teamCnt[rnd];j++) //Team count, not total length, as game field values are after team values
+				schedule[i][j] = Integer.valueOf(tokens[j]);
+		}
+		
+		in.close();
+		
+		return schedule;
+	}
+	
+	public static int[][] getPlayoffsScoreVals(File tournamentFile, int fieldCnt, int rnd, int match) throws IOException {
+		
+		int[][] scoreVals;
+		int lines;
+		String[] tokens;
+		int[] matchCnt = getMatchRoundCnts(tournamentFile);
+		int[] teamCnt = getTeamRoundCnts(tournamentFile);
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip game fields
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip teams
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip quals matches
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip elims match and team data, and amt of played matches
+		in.readLine();
+		in.readLine();
+		in.readLine();
+		
+		for(int i = 0;i < rnd;i++) {
+			for(int j = 0;j < matchCnt[i];j++)
+				in.readLine();
+		}
+		
+		for(int i = 0;i < match;i++)
+			in.readLine();
+		
+		tokens = in.readLine().split(" ");
+		scoreVals = new int[teamCnt[rnd]][fieldCnt];
+		
+		int activeTeam = 0;
+		
+		for(int i = teamCnt[rnd];i < tokens.length;i++) {
+			//If there has been enough fields to account for one team
+			if(i != teamCnt[rnd] && (i-teamCnt[rnd]) % fieldCnt == 0)
+				activeTeam++;
+			
+			//scoreVals[Team number][Item number]
+			//i - teamCnt[rnd] equals total item number
+			scoreVals[activeTeam][(i - teamCnt[rnd]) % fieldCnt] = Integer.valueOf(tokens[i]);
+		}	
+		
+		in.close();
+		
+		return scoreVals;
+	}
+	
+	public static int getQualsMatchCnt(File tournamentFile) throws IOException {
+
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip game field data
+		int lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip team list
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		lines = Integer.valueOf(in.readLine());
+		in.close();
+		
+		return lines;
 		
 	}
 	
@@ -195,11 +579,18 @@ public class Database {
 	}
 
 	public static String createGameType(String gameName, int teamAmt, int timeAmt, 
-			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals) {
+			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals, String os) {
 		
-		createGameFolder();
+		File gameFile;
 		
-		File gameFile = new File("../resources/games/" + gameName + ".gdat");
+		if(os == "Windows")
+			gameFile = new File("runtime/resources/games/" + gameName + ".gdat");
+		else {
+			gameFile = new File(System.getProperty("user.home") + File.separator + "Documents" 
+												+ File.separator + "LegoScorer" + File.separator + "games" + File.separator + gameName + ".gdat");
+		}
+		
+		
 		if(gameFile.exists())
 			return "A game type with this name already exists, please choose a unique name.";
 		
@@ -285,6 +676,19 @@ public class Database {
 			in.close();
 			return Integer.valueOf(str);
 		}
+		
+	}
+	
+	public static int getTournamentTeamsPerMatch(File tournamentFile) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip title
+		in.readLine();
+		
+		int teamAmt = Integer.valueOf(in.readLine());
+		in.close();
+		return teamAmt;
 		
 	}
 	

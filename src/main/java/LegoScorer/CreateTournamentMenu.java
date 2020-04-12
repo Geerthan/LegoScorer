@@ -48,6 +48,8 @@ public class CreateTournamentMenu {
 	final String genScheduleTextVal = "Generate the match schedule. This button can only be used after choosing a game type "
 			+ "and importing a team list.";
 	
+	String os;
+	
 	Stage primaryStage, popupStage, popupMessageStage;
 	
 	File gameFile, teamFile, tournamentFile;
@@ -58,13 +60,7 @@ public class CreateTournamentMenu {
 	
 	public Scene getScene() {
 		
-		FileInputStream logoInputStream = null;
-		
-		try {
-			logoInputStream = new FileInputStream("../resources/img/otu_dark.png");
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+		os = System.getProperty("os.name").substring(0, 7);
 		
 		//Find better solution for initialization
 		gameFile = null; teamFile = null; tournamentFile = null;
@@ -75,7 +71,7 @@ public class CreateTournamentMenu {
 		
 		Rectangle topRect = new Rectangle(500, 50, Color.web("#003C71"));
 		
-		Image logo = new Image(logoInputStream);
+		Image logo = new Image(getClass().getResource("/img/otu_dark.png").toExternalForm().toString());
 		ImageView logoView = new ImageView(logo);
 		logoView.setPreserveRatio(true);
 		logoView.setFitHeight(50);
@@ -212,10 +208,17 @@ public class CreateTournamentMenu {
 	}
 	
 	public File showGameChoosePopup() {
-		Database.createGameFolder();
+		Database.createGameFolder(os);
 		
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setInitialDirectory(new File("../resources/games"));
+		
+		if(os == "Windows")
+			fileChooser.setInitialDirectory(new File("runtime/resources/games"));
+		else {
+			fileChooser.setInitialDirectory(new File(System.getProperty("user.home") + File.separator + "Documents" 
+												+ File.separator + "LegoScorer" + File.separator + "games"));
+		}
+		
 		fileChooser.getExtensionFilters().add(
 				new ExtensionFilter("Game Data Files", "*.gdat")
 		);
@@ -226,10 +229,17 @@ public class CreateTournamentMenu {
 	
 	public File showTournamentSavePopup() {
 		
-		Database.createTournamentFolder();
+		Database.createTournamentFolder(os);
 		
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setInitialDirectory(new File("../resources/tournaments"));
+		
+		if(os == "Windows")
+			fileChooser.setInitialDirectory(new File("runtime/resources/tournaments"));
+		else {
+			fileChooser.setInitialDirectory(new File(System.getProperty("user.home") + File.separator + "Documents" 
+												+ File.separator + "LegoScorer" + File.separator + "tournaments"));
+		}
+		
 		fileChooser.getExtensionFilters().add(
 			new ExtensionFilter("Tournament Data Files", "*.tdat")
 		);
