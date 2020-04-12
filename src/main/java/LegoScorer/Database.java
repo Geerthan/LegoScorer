@@ -261,7 +261,7 @@ public class Database {
 		int teamAmt = teamRoundCnts[rnd];
 		
 		int teamIter = 1;
-		int curTeam = 1;
+		int curTeam = 0;
 		
 		int matchesScheduled = 0;
 		int scheduledTeamCount = 0;
@@ -281,23 +281,23 @@ public class Database {
 		while(matchesScheduled < totalMatchCount) {
 			for(int i = 0;i < teamsPerMatch;i++) {
 				
-				schedule[matchesScheduled][i] = curTeam;
-				teamSelect[curTeam-1] = true;
+				schedule[matchesScheduled][i] = teamList[curTeam];
+				teamSelect[curTeam] = true;
 				
 				scheduledTeamCount++;
 				if(scheduledTeamCount % teamAmt == 0) {
 					teamIter++;
-					curTeam = 1 - teamIter;
+					curTeam = 0 - teamIter;
 					for(int j = 0;j < teamAmt;j++) teamSelect[j] = false;
 				}
 				
 				System.out.print(schedule[matchesScheduled][i] + " ");
 				
 				curTeam = curTeam + teamIter;
-				if(curTeam > teamAmt) curTeam -= teamAmt;
-				while(teamSelect[curTeam-1]) {
+				curTeam = curTeam % teamAmt;
+				while(teamSelect[curTeam]) {
 					curTeam++;
-					if(curTeam > teamAmt) curTeam -= teamAmt;
+					curTeam = curTeam % teamAmt;
 				}
 				
 			}
@@ -310,23 +310,17 @@ public class Database {
 		 * END
 		 */
 		
-		/*
+		
 		FileWriter fileWriter;
 		
 		try {
 			fileWriter = new FileWriter(tournamentFile, true);
 			
-			int curTeam = 0, rate = 1;
-			
 			for(int j = 0;j < matchRoundCnts[rnd];j++) {
 				
 				//Team data
 				for(int k = 0;k < tpmCnts[rnd];k++) {
-					curTeam += rate;
-					if(curTeam > teamRoundCnts[rnd]) {
-						teamRoundCnts
-					}
-					fileWriter.write("" + roundSeeds[teamRoundCnts[rnd]*j + k] + " ");
+					fileWriter.write("" + schedule[j][k] + " ");
 				}
 				
 				//Game data
@@ -341,7 +335,7 @@ public class Database {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "ERROR: " + e.toString();
-		}*/
+		}
 		
 		return "";
 	}
@@ -545,7 +539,8 @@ public class Database {
 		for(int i = 0;i < lines;i++)
 			in.readLine();
 		
-		//Skip match and team count info, and amt of played rounds
+		//Skip match, team count, and teams per match info, and amt of played rounds
+		in.readLine();
 		in.readLine();
 		in.readLine();
 		in.readLine();

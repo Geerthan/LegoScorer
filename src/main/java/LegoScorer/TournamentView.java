@@ -346,14 +346,14 @@ public class TournamentView {
 			labelledInputs.add(roundLabel, 0, i+2);
 			
 			//Spinner for amount of matches in a round (ex. 4 quarterfinal matches)
-			Spinner<Integer> matchSpinner = new Spinner<Integer>(0, 99, (int) Math.pow(2, i+1));
+			Spinner<Integer> matchSpinner = new Spinner<Integer>(0, 99, (int) Math.pow(2, i));
 			matchSpinners[i] = matchSpinner;
 			
 			labelledInputs.add(matchSpinner, 1, i+2);
 			
 			//TODO Add default numbers
 			//Spinner for amount of teams in the round total (ex. 16 teams)
-			Spinner<Integer> teamSpinner = new Spinner<Integer>(0, 99, (int) Math.pow(2, i+2));
+			Spinner<Integer> teamSpinner = new Spinner<Integer>(0, 99, (int) Math.pow(2, i+1));
 			teamSpinners[i] = teamSpinner;
 			
 			labelledInputs.add(teamSpinner, 2, i+2);
