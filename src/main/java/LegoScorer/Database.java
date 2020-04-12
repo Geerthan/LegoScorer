@@ -205,10 +205,12 @@ public class Database {
 		
 		int[] matchRoundCnts;
 		int[] teamRoundCnts;
+		int[] tpmCnts;
 		
 		try {
 			matchRoundCnts = getMatchRoundCnts(tournamentFile);
 			teamRoundCnts = getTeamRoundCnts(tournamentFile);
+			tpmCnts = getTPMCnts(tournamentFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "ERROR: " + e.toString();
@@ -233,13 +235,12 @@ public class Database {
 		}
 		
 		//Balanced ranking gen (ex. for teams 1-8, matchmake 1-8-2-7, 3-6-4-5 instead of 1-2-3-4, 5-6-7-8)
-		int curRoundTeams = matchRoundCnts[rnd] * teamRoundCnts[rnd];
-		int[] roundSeeds = new int[matchRoundCnts[rnd] * teamRoundCnts[rnd]];
+		int[] roundSeeds = new int[teamRoundCnts[rnd]];
 		
-		int lo = 1, hi = curRoundTeams;
+		int lo = 1, hi = teamRoundCnts[rnd];
 		boolean toggle = false;
 			
-		for(int i = 0;i < curRoundTeams;i++) {
+		for(int i = 0;i < teamRoundCnts[rnd];i++) {
 			if(!toggle) {
 				roundSeeds[i] = lo;
 				lo++;
@@ -252,20 +253,84 @@ public class Database {
 			}
 		}
 		
+		/**
+		 * START
+		 */
+		
+		int teamsPerMatch = tpmCnts[rnd];
+		int teamAmt = teamRoundCnts[rnd];
+		
+		int teamIter = 1;
+		int curTeam = 1;
+		
+		int matchesScheduled = 0;
+		int scheduledTeamCount = 0;
+		
+		int[] teamList = new int[teamAmt];
+		boolean[] teamSelect = new boolean[teamAmt];
+		
+		int totalMatchCount = matchRoundCnts[rnd];
+
+		int[][] schedule = new int[totalMatchCount][teamsPerMatch];
+		
+		for(int i = 0;i < teamAmt;i++) {
+			teamList[i] = i+1;
+			teamSelect[i] = false;
+		}
+		
+		while(matchesScheduled < totalMatchCount) {
+			for(int i = 0;i < teamsPerMatch;i++) {
+				
+				schedule[matchesScheduled][i] = curTeam;
+				teamSelect[curTeam-1] = true;
+				
+				scheduledTeamCount++;
+				if(scheduledTeamCount % teamAmt == 0) {
+					teamIter++;
+					curTeam = 1 - teamIter;
+					for(int j = 0;j < teamAmt;j++) teamSelect[j] = false;
+				}
+				
+				System.out.print(schedule[matchesScheduled][i] + " ");
+				
+				curTeam = curTeam + teamIter;
+				if(curTeam > teamAmt) curTeam -= teamAmt;
+				while(teamSelect[curTeam-1]) {
+					curTeam++;
+					if(curTeam > teamAmt) curTeam -= teamAmt;
+				}
+				
+			}
+			System.out.println();
+			matchesScheduled++;
+		}
+		
+		
+		/**
+		 * END
+		 */
+		
+		/*
 		FileWriter fileWriter;
 		
 		try {
 			fileWriter = new FileWriter(tournamentFile, true);
 			
+			int curTeam = 0, rate = 1;
+			
 			for(int j = 0;j < matchRoundCnts[rnd];j++) {
 				
 				//Team data
-				for(int k = 0;k < teamRoundCnts[rnd];k++) {
+				for(int k = 0;k < tpmCnts[rnd];k++) {
+					curTeam += rate;
+					if(curTeam > teamRoundCnts[rnd]) {
+						teamRoundCnts
+					}
 					fileWriter.write("" + roundSeeds[teamRoundCnts[rnd]*j + k] + " ");
 				}
 				
 				//Game data
-				for(int l = 0;l < scoringFields * teamRoundCnts[rnd];l++)
+				for(int l = 0;l < scoringFields * tpmCnts[rnd];l++)
 					fileWriter.write("0 ");
 				
 				fileWriter.write("\n");
@@ -276,13 +341,12 @@ public class Database {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "ERROR: " + e.toString();
-		}
+		}*/
 		
 		return "";
 	}
 	
 	public static int[] getMatchRoundCnts(File tournamentFile) throws IOException {
-		
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
@@ -318,7 +382,6 @@ public class Database {
 	}
 	
 	public static int[] getTeamRoundCnts(File tournamentFile) throws IOException {
-		
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
@@ -342,6 +405,7 @@ public class Database {
 		for(int i = 0;i < lines;i++)
 			in.readLine();
 		
+		//Skip match cnts
 		in.readLine();
 		
 		String[] tokens = in.readLine().split(" ");
@@ -353,6 +417,45 @@ public class Database {
 		}
 		
 		return teamRoundCnts;
+	}
+	
+	public static int[] getTPMCnts(File tournamentFile) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		
+		//Skip scoring elements
+		int lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Skip team names
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip quals matches
+		lines = Integer.valueOf(in.readLine());
+		for(int i = 0;i < lines;i++)
+			in.readLine();
+		
+		//Skip match and team round cnts
+		in.readLine();
+		in.readLine();
+		
+		String[] tokens = in.readLine().split(" ");
+		in.close();
+		
+		int[] tpmCnts = new int[tokens.length];
+		for(int i = 0;i < tokens.length;i++) {
+			tpmCnts[i] = Integer.valueOf(tokens[i]);
+		}
+		
+		return tpmCnts;
 	}
 	
 	public static boolean hasPlayoffs(File tournamentFile) throws IOException {
