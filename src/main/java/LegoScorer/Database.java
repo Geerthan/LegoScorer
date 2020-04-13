@@ -256,9 +256,19 @@ public class Database {
 			}
 		}
 		
-		/**
-		 * START
-		 */
+		double[][] rankings;
+		try {
+			if(rnd == 0) rankings = getSortedQualsRankings(tournamentFile);
+			else rankings = getSortedElimsRankings(tournamentFile, rnd-1);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		//Now use seeding template on real rankings
+		for(int i = 0;i < teamRoundCnts[rnd];i++) {
+			roundSeeds[i] = (int) rankings[roundSeeds[i]-1][0];
+		}
 		
 		int teamsPerMatch = tpmCnts[rnd];
 		int teamAmt = teamRoundCnts[rnd];
@@ -269,22 +279,19 @@ public class Database {
 		int matchesScheduled = 0;
 		int scheduledTeamCount = 0;
 		
-		int[] teamList = new int[teamAmt];
 		boolean[] teamSelect = new boolean[teamAmt];
 		
 		int totalMatchCount = matchRoundCnts[rnd];
 
 		int[][] schedule = new int[totalMatchCount][teamsPerMatch];
 		
-		for(int i = 0;i < teamAmt;i++) {
-			teamList[i] = i+1;
+		for(int i = 0;i < teamAmt;i++)
 			teamSelect[i] = false;
-		}
 		
 		while(matchesScheduled < totalMatchCount) {
 			for(int i = 0;i < teamsPerMatch;i++) {
 				
-				schedule[matchesScheduled][i] = teamList[curTeam];
+				schedule[matchesScheduled][i] = roundSeeds[curTeam];
 				teamSelect[curTeam] = true;
 				
 				scheduledTeamCount++;
@@ -306,13 +313,7 @@ public class Database {
 			}
 			System.out.println();
 			matchesScheduled++;
-		}
-		
-		
-		/**
-		 * END
-		 */
-		
+		}		
 		
 		FileWriter fileWriter;
 		
@@ -599,6 +600,7 @@ public class Database {
 		in.readLine();
 		in.readLine();
 		in.readLine();
+		in.readLine();
 		
 		for(int i = 0;i < rnd;i++) {
 			for(int j = 0;j < matchCnt[i];j++)
@@ -628,6 +630,38 @@ public class Database {
 		return scoreVals;
 	}
 	
+	public static double[][] getSortedElimsRankings(File tournamentFile, int rnd) throws IOException {
+		int[][] schedule = getPlayoffsSchedule(tournamentFile, rnd);
+		double[] uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
+		double[] repeatScorePtVals = getRepeatScorePtVals(tournamentFile);
+		int teamAmt = getTournamentTeamAmt(tournamentFile);
+		double[] teamScores = new double[teamAmt];
+		double curScore;
+		int[][] scoreVals;
+		
+		for(int i = 0;i < teamAmt;i++)
+			teamScores[i] = 0;
+		
+		for(int i = 0;i < schedule.length;i++) {
+			scoreVals = getPlayoffsScoreVals(tournamentFile, uniqueScorePtVals.length + repeatScorePtVals.length, rnd, i);
+			for(int j = 0;j < schedule[i].length;j++) {
+				curScore = 0;
+				for(int k = 0;k < uniqueScorePtVals.length;k++) curScore += scoreVals[j][k] * uniqueScorePtVals[k];
+				for(int k = 0;k < repeatScorePtVals.length;k++) curScore += scoreVals[j][uniqueScorePtVals.length + k] * repeatScorePtVals[k];
+				teamScores[schedule[i][j]-1] += curScore;
+			}
+		}
+		
+		double[][] rankings = new double[teamAmt][2];
+		for(int i = 0;i < teamAmt;i++) {
+			rankings[i][0] = i+1;
+			rankings[i][1] = -teamScores[i];
+		}
+		
+		Arrays.sort(rankings, Comparator.comparingDouble(r -> r[1]));
+		return rankings;
+	}
+	
 	public static double[][] getSortedQualsRankings(File tournamentFile) throws IOException {
 		int[][] schedule = getSchedule(tournamentFile);
 		double[] uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
@@ -653,7 +687,7 @@ public class Database {
 		double[][] rankings = new double[teamAmt][2];
 		for(int i = 0;i < teamAmt;i++) {
 			rankings[i][0] = i+1;
-			rankings[i][1] = teamScores[i];
+			rankings[i][1] = -teamScores[i];
 		}
 		
 		Arrays.sort(rankings, Comparator.comparingDouble(r -> r[1]));
