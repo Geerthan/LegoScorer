@@ -43,6 +43,10 @@ jlink {
 		name = 'LegoScorer'
 	}
 	
+	mergedModule {
+		requires 'java.base';
+	}
+	
 	jpackage {
 		jpackageHome = 'C:/Program Files/Java/jdk-14'
 		//jpackageHome = 'C:/Users/geert/Documents/School/Work/Java/jdks/mac-jdk-14'
@@ -56,6 +60,8 @@ jlink {
 }
 
 dependencies {
+	compile 'org.apache.poi:poi:4.1.2'
+	compile 'org.apache.poi:poi-ooxml:4.1.2'
 }
 
 run {

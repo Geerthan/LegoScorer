@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +18,12 @@ import java.util.TreeMap;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class Database {
 	
@@ -64,7 +72,8 @@ public class Database {
 		
 	}
 	
-	public static String createTournamentFile(File tournamentFile, File gameFile, File teamFile, int startTime, int endTime, int teamMatchCount) {
+	public static String createTournamentFile(File tournamentFile, File gameFile, File teamFile, int startTime, int endTime, 
+			int breakStartTime, int breakDurationTime, int teamMatchCount) {
 		
 		ArrayList<String> teams;
 		
@@ -117,13 +126,23 @@ public class Database {
 			return "ERROR: " + e.toString();
 		}
 		
-		int breakTime = Integer.valueOf(getMatchBreakTime(gameFile, teamFile, teamMatchCount, startTime, endTime).replace(":", ""));
+		int breakTime = Integer.valueOf(getMatchBreakTime(gameFile, teamFile, teamMatchCount, startTime, endTime, 
+				breakStartTime, breakDurationTime).replace(":", ""));
 		double timeDif = (gameTime / 100) + (breakTime / 100) + (gameTime % 100 / 60.0) + (breakTime % 100 / 60.0);
 		
 		double curTime = (startTime / 100 * 60) + (startTime % 100);
 		
+		double breakStartMin = (breakStartTime/100*60) + (breakStartTime%60);
+		double breakDurationMin = (breakDurationTime/100*60) + (breakDurationTime%60);
+		boolean breakNeeded = (breakDurationMin != 0);
+		
 		for(int i = 0;i < schedule.length;i++) {
 			schedule[i][0] = ((int) curTime / 60 * 100) + (int) (curTime % 60);
+			if(breakNeeded && curTime > breakStartMin) {
+				curTime += breakDurationMin;
+				curTime -= timeDif;
+				breakNeeded = false;
+			}
 			curTime += timeDif;
 		}
 		
@@ -1005,7 +1024,7 @@ public class Database {
 	}
 	
 	public static String getMatchBreakTime(File gameFile, File teamFile, int teamMatchCount, 
-			int startTime, int endTime) {
+			int startTime, int endTime, int breakStartTime, int breakDurationTime) {
 		
 		String totalMatchCount = getTotalMatchCount(gameFile, teamFile, teamMatchCount);
 		if(totalMatchCount == "-1") return "-1";
@@ -1017,6 +1036,16 @@ public class Database {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "ERROR: " + e.toString();
+		}
+		
+		// Breaks can be calculated by reducing the actual max time
+		if(breakDurationTime != 0) {
+			int endTimeMin = (endTime/100*60) + (endTime%60);
+			int breakTimeMin = (breakDurationTime/100*60) + (breakDurationTime%60);
+			System.out.println(endTime + " " + endTimeMin + " " + breakTimeMin);
+			endTimeMin = endTimeMin - breakTimeMin;
+			endTime = (endTimeMin/60*100) + (endTimeMin%60);
+			System.out.println(endTime + " " + endTimeMin + " " + breakTimeMin);
 		}
 		
 		//TODO have TimeFields work on hr:min and min:sec
@@ -1051,6 +1080,16 @@ public class Database {
 		in.close();
 		return teamAmt;
 		
+	}
+	
+	public static int getTournamentTPM(File tournamentFile) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		in.readLine();
+		int tpm = Integer.valueOf(in.readLine());
+		in.close();
+		
+		return tpm;
 	}
 	
 	public static String[] getUniqueScoreFields(File tournamentFile) throws IOException {
@@ -1257,4 +1296,183 @@ public class Database {
 		
 	}
 	
+	public static void updateQualsWorkbook(File tournamentFile) throws IOException {
+		Workbook book = new XSSFWorkbook();
+		Sheet scheduleSheet = book.createSheet("Quals Schedule");
+		int[][] schedule = getSchedule(tournamentFile);
+		int tpm = getTournamentTPM(tournamentFile);
+		Row r;
+		Cell c;
+		String timeStr;
+		
+		// Quals Schedule
+		r = scheduleSheet.createRow(0);
+		c = r.createCell(0);
+		c.setCellValue("Match Number");
+		c = r.createCell(1);
+		c.setCellValue("Match Time");
+		
+		for(int i = 0;i < tpm;i++) {
+			c = r.createCell(i+2);
+			c.setCellValue("Team " + (i+1));
+		}
+		
+		for(int i = 0;i < schedule.length;i++) {
+			r = scheduleSheet.createRow(i+1);
+			c = r.createCell(0);
+			c.setCellValue(i+1);
+			for(int j = 0;j < schedule[i].length;j++) {
+				c = r.createCell(j+1);
+				if(j == 0) {
+					timeStr = String.valueOf(schedule[i][j]);
+					timeStr = timeStr.substring(0, timeStr.length()-2) + ":" + timeStr.substring(timeStr.length()-2);
+					c.setCellValue(timeStr);
+				}
+				else c.setCellValue(schedule[i][j]);
+			}
+		}
+		
+		// Quals Scoring
+		String[] uniqueScoreFields = getUniqueScoreFields(tournamentFile);
+		String[] repeatScoreFields = getRepeatScoreFields(tournamentFile);
+		int teamAmt = getTournamentTeamAmt(tournamentFile);
+		int[][] scoreVals;
+		
+		int[][] scoreTable = new int[teamAmt][uniqueScoreFields.length + repeatScoreFields.length];
+		for(int i = 0;i < teamAmt;i++) {
+			for(int j = 0;j < uniqueScoreFields.length + repeatScoreFields.length;j++)
+				scoreTable[i][j] = 0;
+		}
+		
+		Sheet scoreSheet = book.createSheet("Quals Scoring");
+		r = scoreSheet.createRow(0);
+		c = r.createCell(0);
+		c.setCellValue("Team");
+		
+		for(int i = 0;i < uniqueScoreFields.length;i++) {
+			c = r.createCell(i+1);
+			c.setCellValue(uniqueScoreFields[i]);
+		}
+		
+		for(int i = 0;i < repeatScoreFields.length;i++) {
+			c = r.createCell(i + 1 + uniqueScoreFields.length);
+			c.setCellValue(repeatScoreFields[i]);
+		}
+		
+		for(int i = 0;i < schedule.length;i++) {
+			scoreVals = getScoreVals(tournamentFile, uniqueScoreFields.length, repeatScoreFields.length, teamAmt, i);
+			for(int j = 1;j < schedule[i].length;j++) {
+				for(int k = 0;k < uniqueScoreFields.length+repeatScoreFields.length;k++) {
+					scoreTable[schedule[i][j]-1][k] += scoreVals[j-1][k];
+				}
+			}
+		}
+		
+		for(int i = 0;i < scoreTable.length;i++) {
+			r = scoreSheet.createRow(i+1);
+			c = r.createCell(0);
+			c.setCellValue(i+1);
+			for(int j = 0;j < uniqueScoreFields.length+repeatScoreFields.length;j++) {
+				c = r.createCell(j+1);
+				c.setCellValue(scoreTable[i][j]);
+			}
+		}
+		
+		String pth = tournamentFile.getPath();
+		pth = pth.substring(0, pth.length()-5) + "-quals.xlsx";
+		
+		OutputStream out = new FileOutputStream(pth);
+		book.write(out);
+		book.close();
+	}
+	
+	public static void updateElimsWorkbook(File tournamentFile, int rnd) throws IOException {
+		Workbook book = new XSSFWorkbook();
+		Sheet scheduleSheet = book.createSheet("Elims " + (rnd+1) + " Schedule");
+		int[][] schedule = getPlayoffsSchedule(tournamentFile, rnd);
+		int tpm = getTPMCnts(tournamentFile)[rnd];
+		Row r;
+		Cell c;
+		String timeStr;
+		
+		// Elims Schedule
+		r = scheduleSheet.createRow(0);
+		c = r.createCell(0);
+		c.setCellValue("Match Number");
+		
+		for(int i = 0;i < tpm;i++) {
+			c = r.createCell(i+1);
+			c.setCellValue("Team " + (i+1));
+		}
+		
+		for(int i = 0;i < schedule.length;i++) {
+			r = scheduleSheet.createRow(i+1);
+			c = r.createCell(0);
+			c.setCellValue(i+1);
+			for(int j = 0;j < schedule[i].length;j++) {
+				c = r.createCell(j+1);
+				c.setCellValue(schedule[i][j]);
+			}
+		}
+		
+		// Elims Scoring
+		String[] uniqueScoreFields = getUniqueScoreFields(tournamentFile);
+		String[] repeatScoreFields = getRepeatScoreFields(tournamentFile);
+		int teamAmt = getTeamRoundCnts(tournamentFile)[rnd];
+		int tournamentTeamAmt = getTournamentTeamAmt(tournamentFile);
+		int[][] scoreVals;
+		int curRow = 0;
+		boolean[] isPlaying = new boolean[tournamentTeamAmt];
+		
+		int[][] scoreTable = new int[tournamentTeamAmt][uniqueScoreFields.length + repeatScoreFields.length];
+		for(int i = 0;i < tournamentTeamAmt;i++) {
+			isPlaying[i] = false;
+			for(int j = 0;j < uniqueScoreFields.length + repeatScoreFields.length;j++)
+				scoreTable[i][j] = 0;
+		}
+		
+		Sheet scoreSheet = book.createSheet("Elims " + (rnd+1) + " Scoring");
+		r = scoreSheet.createRow(0);
+		c = r.createCell(0);
+		c.setCellValue("Team");
+		
+		for(int i = 0;i < uniqueScoreFields.length;i++) {
+			c = r.createCell(i+1);
+			c.setCellValue(uniqueScoreFields[i]);
+		}
+		
+		for(int i = 0;i < repeatScoreFields.length;i++) {
+			c = r.createCell(i + 1 + uniqueScoreFields.length);
+			c.setCellValue(repeatScoreFields[i]);
+		}
+		
+		for(int i = 0;i < schedule.length;i++) {
+			scoreVals = getPlayoffsScoreVals(tournamentFile, uniqueScoreFields.length+repeatScoreFields.length, rnd, i);
+			for(int j = 0;j < schedule[i].length;j++) {
+				isPlaying[schedule[i][j]-1] = true;
+				for(int k = 0;k < uniqueScoreFields.length+repeatScoreFields.length;k++) {
+					scoreTable[schedule[i][j]-1][k] += scoreVals[j][k];
+				}
+			}
+		}
+		
+		for(int i = 0;i < scoreTable.length;i++) {
+			if(!isPlaying[i]) continue;
+			curRow++;
+			r = scoreSheet.createRow(curRow);
+			c = r.createCell(0);
+			c.setCellValue(i+1);
+			for(int j = 0;j < uniqueScoreFields.length+repeatScoreFields.length;j++) {
+				c = r.createCell(j+1);
+				c.setCellValue(scoreTable[i][j]);
+			}
+		}
+		
+		String pth = tournamentFile.getPath();
+		pth = pth.substring(0, pth.length()-5) + "-elims" + (rnd+1) + ".xlsx";
+		
+		OutputStream out = new FileOutputStream(pth);
+		book.write(out);
+		book.close();
+	}
 }

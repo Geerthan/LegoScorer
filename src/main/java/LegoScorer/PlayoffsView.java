@@ -101,6 +101,13 @@ public class PlayoffsView {
 		root.getChildren().add(topStack);
 		
 		HBox viewBox = new HBox();
+		
+		try {
+			Database.updateElimsWorkbook(tournamentFile, curRound);
+		} catch (IOException e) {
+			//TODO Show error message
+			e.printStackTrace();
+		}
 
 		try {
 			uniqueScoreFields = Database.getUniqueScoreFields(tournamentFile);
@@ -420,6 +427,13 @@ public class PlayoffsView {
 		String msg = Database.replaceFileLine(tournamentFile, lineAmt, lineVal);
 		if(msg != "") {
 			//TODO Show error message
+		}
+		
+		try {
+			Database.updateElimsWorkbook(tournamentFile, rnd);
+		} catch (IOException e) {
+			//TODO Show error message
+			e.printStackTrace();
 		}
 	}
 	

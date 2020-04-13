@@ -336,11 +336,15 @@ public class CreateTournamentMenu {
 		
 		Label startTimeLabel = new Label("Start Time: ");
 		Label endTimeLabel = new Label("End Time: ");
+		Label breakStartTimeLabel = new Label("Break Start Time: ");
+		Label breakDurationLabel = new Label("Break Duration: ");
 		Label teamMatchLabel = new Label("Matches per team: ");
 		
 		labelledInputs.add(startTimeLabel, 0, 0);
 		labelledInputs.add(endTimeLabel, 0, 1);
-		labelledInputs.add(teamMatchLabel, 0, 2);
+		labelledInputs.add(breakStartTimeLabel, 0, 2);
+		labelledInputs.add(breakDurationLabel, 0, 3);
+		labelledInputs.add(teamMatchLabel, 0, 4);
 		
 		//TODO Relocate this declaration, possibly make them all at start of method
 		Spinner<Integer> matchSpinner = new Spinner<Integer>(1, 99, 8);
@@ -348,22 +352,27 @@ public class CreateTournamentMenu {
 		
 		TimeField startTimeField = new TimeField("09:00");
 		TimeField endTimeField = new TimeField("15:00");
+		TimeField breakStartTimeField = new TimeField("12:00");
+		TimeField breakDurationTimeField = new TimeField("00:30");
 		
 		//TODO Relocate this along with the other text values
 		Text matchBreakTimeAmt = new Text(Database.getMatchBreakTime(gameFile, teamFile, 
 				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()), 
-				startTimeField.getValue(), endTimeField.getValue()));
+				startTimeField.getValue(), endTimeField.getValue(),
+				breakStartTimeField.getValue(), breakDurationTimeField.getValue()));
 		
 		startTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
 			matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
 				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
-				startTimeField.getValue(), endTimeField.getValue()));
+				startTimeField.getValue(), endTimeField.getValue(),
+				breakStartTimeField.getValue(), breakDurationTimeField.getValue()));
 		});
 		
 		endTimeField.textProperty().addListener((observable, oldValue, newValue) -> {
 			matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
 				Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
-				startTimeField.getValue(), endTimeField.getValue()));
+				startTimeField.getValue(), endTimeField.getValue(),
+				breakStartTimeField.getValue(), breakDurationTimeField.getValue()));
 		});
 		
 		//TODO Relocate this along with the other text values
@@ -395,7 +404,8 @@ public class CreateTournamentMenu {
 				
 				matchBreakTimeAmt.setText(Database.getMatchBreakTime(gameFile, teamFile, 
 						Integer.valueOf(matchSpinner.getEditor().textProperty().getValue()),
-						startTimeField.getValue(), endTimeField.getValue()));
+						startTimeField.getValue(), endTimeField.getValue(),
+						breakStartTimeField.getValue(), breakDurationTimeField.getValue()));
 			}
 			else totalMatchAmt.setText(Database.getTotalMatchCount(gameFile, teamFile, 0));
 		});
@@ -408,7 +418,9 @@ public class CreateTournamentMenu {
 		
 		labelledInputs.add(startTimeField, 1, 0);
 		labelledInputs.add(endTimeField, 1, 1);
-		labelledInputs.add(matchSpinner, 1, 2);
+		labelledInputs.add(breakStartTimeField, 1, 2);
+		labelledInputs.add(breakDurationTimeField, 1, 3);
+		labelledInputs.add(matchSpinner, 1, 4);
 		
 		root.getChildren().add(labelledInputs);
 		
@@ -444,7 +456,8 @@ public class CreateTournamentMenu {
 		generateButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				String msg = Database.createTournamentFile(tournamentFile, gameFile, teamFile, 
-						startTimeField.getValue(), endTimeField.getValue(), matchSpinner.getValue());
+						startTimeField.getValue(), endTimeField.getValue(), 
+						breakStartTimeField.getValue(), breakDurationTimeField.getValue(), matchSpinner.getValue());
 				if(msg != "") showErrorDialog(msg);
 				else {
 					popupStage.hide();

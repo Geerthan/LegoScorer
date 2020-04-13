@@ -27,6 +27,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -45,7 +46,7 @@ public class TournamentView {
 	String[] uniqueScoreFields, repeatScoreFields;
 	int teamAmt;
 	GridPane scorePane;
-	Button playoffsButton, saveButton;
+	Button playoffsButton, saveButton, reportsButton;
 	ListView<HBox> gameLV;
 	
 	boolean unsaved;
@@ -74,6 +75,25 @@ public class TournamentView {
 		headerButtonBox.setAlignment(Pos.CENTER_RIGHT);
 		headerButtonBox.setSpacing(5);
 		
+//		TODO Finish implementation
+//		reportsButton = new Button("Import Reports");
+//		if(Database.hasReports(tournamentFile)) {
+//			reportsButton.setId("disabled-header-button");
+//		}
+//		else {
+//			reportsButton.setId("header-button");
+//			reportsButton.setOnAction(new EventHandler<ActionEvent>() {
+//				public void handle(ActionEvent e) {
+//					
+//					
+//					
+//				}
+//			});
+//		}
+		
+		Region spacer = new Region();
+		HBox.setHgrow(spacer, Priority.ALWAYS);
+		
 		playoffsButton = new Button("Playoffs Mode");
 		playoffsButton.setId("orange-header-button");
 		
@@ -87,6 +107,13 @@ public class TournamentView {
 		root.getChildren().add(topStack);
 		
 		HBox viewBox = new HBox();
+		
+		try {
+			Database.updateQualsWorkbook(tournamentFile);
+		} catch (IOException e) {
+			//TODO Show error message
+			e.printStackTrace();
+		}
 
 		try {
 			uniqueScoreFields = Database.getUniqueScoreFields(tournamentFile);
@@ -470,7 +497,6 @@ public class TournamentView {
 	
 	// TODO Show string error
 	public void save(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int match) {
-		
 		int lineAmt = 3 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + match;
 		
 		String lineVal = "";
@@ -489,6 +515,13 @@ public class TournamentView {
 		if(msg != "") {
 			//TODO Show error message
 		}		
+		
+		try {
+			Database.updateQualsWorkbook(tournamentFile);
+		} catch (IOException e) {
+			//TODO Show error message
+			e.printStackTrace();
+		}
 	}
 	
 	private int[] getScoreVals(int col, int uniqueCnt, int repeatCnt) {
