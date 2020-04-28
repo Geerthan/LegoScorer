@@ -408,7 +408,7 @@ public class PlayoffsView {
 	// TODO Show string error
 	public void save(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int rnd, int match) {
 		
-		int lineAmt = 3 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + qualsMatchCnt + 4 + match;
+		int lineAmt = 4 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + qualsMatchCnt + 4 + match;
 		for(int i = 0;i < rnd;i++)
 			lineAmt += matchRoundCnt[i];
 		

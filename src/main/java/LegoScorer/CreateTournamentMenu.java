@@ -161,6 +161,7 @@ public class CreateTournamentMenu {
 			}
 		);
 		
+		//TODO: Finish up this implementation
 		genScheduleButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				if(gameFile == null || teamFile == null || tournamentFile == null) return;

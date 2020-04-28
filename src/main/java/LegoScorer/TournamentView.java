@@ -35,8 +35,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 public class TournamentView {
 	
@@ -75,21 +77,56 @@ public class TournamentView {
 		headerButtonBox.setAlignment(Pos.CENTER_RIGHT);
 		headerButtonBox.setSpacing(5);
 		
+		boolean hasReports;
+		try {
+			hasReports = Database.hasReports(tournamentFile);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			hasReports = false;
+		}
+		
 //		TODO Finish implementation
-//		reportsButton = new Button("Import Reports");
-//		if(Database.hasReports(tournamentFile)) {
-//			reportsButton.setId("disabled-header-button");
-//		}
-//		else {
-//			reportsButton.setId("header-button");
-//			reportsButton.setOnAction(new EventHandler<ActionEvent>() {
-//				public void handle(ActionEvent e) {
-//					
-//					
-//					
-//				}
-//			});
-//		}
+		reportsButton = new Button("Import Reports");
+		if(!hasReports) {
+			reportsButton.setId("disabled-header-button");
+		}
+		else {
+			reportsButton.setId("header-button");
+			reportsButton.setOnAction(new EventHandler<ActionEvent>() {
+				public void handle(ActionEvent e) {
+					VBox root = new VBox();
+					root.setPadding(new Insets(15));
+					root.setAlignment(Pos.CENTER);
+					
+					Text helpText = new Text("Please import the report scores as a .csv file (ex. from Excel). "
+							+ "All scores should be in column one, with team names in column two. "
+							+ "New score values will override old score values, and partial imports can be done.");
+					helpText.setWrappingWidth(400);
+					VBox.setMargin(helpText, new Insets(0, 0, 5, 0));
+					root.getChildren().add(helpText);
+					
+					//TODO: Add cancel btn
+					Button importButton = new Button("Choose file");
+					importButton.setId("popup-button");
+					
+					importButton.setOnAction(new EventHandler<ActionEvent>() {
+						public void handle(ActionEvent e) {
+							showReportCSVPopup();
+						}
+					});
+					
+					root.getChildren().add(importButton);
+					
+					Scene s = new Scene(root);
+					s.getStylesheets().add("tournament-view.css");
+					popupStage = new Stage();
+					popupStage.setScene(s);
+					popupStage.initOwner(primaryStage);
+					popupStage.initModality(Modality.WINDOW_MODAL);
+					popupStage.show();
+				}
+			});
+		}
 		
 		Region spacer = new Region();
 		HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -99,9 +136,9 @@ public class TournamentView {
 		
 		saveButton = new Button("Save");
 		
-		headerButtonBox.getChildren().addAll(playoffsButton, saveButton);
+		headerButtonBox.getChildren().addAll(reportsButton, spacer, playoffsButton, saveButton);
 		
-		StackPane.setMargin(headerButtonBox, new Insets(0, 20, 0, 0));
+		StackPane.setMargin(headerButtonBox, new Insets(0, 20, 0, 10));
 		topStack.getChildren().addAll(topRect, logoView, headerButtonBox);
 		
 		root.getChildren().add(topStack);
@@ -157,6 +194,87 @@ public class TournamentView {
 		s.getStylesheets().add("tournament-view.css");
 		return s;
 		
+	}
+	
+	// Shows the report CSV FileChooser, as well as a preview of the imported scores. 
+	public void showReportCSVPopup() {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.getExtensionFilters().add(
+				new ExtensionFilter("CSV File", "*.csv")
+		);
+		File reportCSVFile = fileChooser.showOpenDialog(popupStage);
+		popupStage.hide();
+		
+		String[] teamNames;
+		double[] reportScores;
+		
+		try {
+			teamNames = Database.getCSVReportTeamNames(reportCSVFile);
+			reportScores = Database.getCSVReportScores(reportCSVFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//TODO: Show error popup
+			return;
+		}
+		
+		VBox root = new VBox();
+		root.setPadding(new Insets(15));
+		root.setAlignment(Pos.CENTER);
+		
+		Text previewTitleText = new Text("Report Score Preview");
+		previewTitleText.setId("dialog-title-text");
+		root.getChildren().add(previewTitleText);
+		
+		ListView<String> reportScoreListView = new ListView<String>();
+		reportScoreListView.setFocusTraversable(false);
+		reportScoreListView.setPrefHeight(120);
+		VBox.setMargin(reportScoreListView, new Insets(0, 10, 10, 10));
+		
+		for(int i = 0;i < teamNames.length;i++)
+			reportScoreListView.getItems().add(teamNames[i] + ": " + reportScores[i]);
+		
+		root.getChildren().add(reportScoreListView);
+		
+		HBox buttonBox = new HBox();
+		buttonBox.setSpacing(5);
+		buttonBox.setAlignment(Pos.CENTER);
+		
+		Button cancelButton = new Button("Cancel");
+		cancelButton.setId("no-button");
+		
+		cancelButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				popupStage.hide();
+			}
+		});
+		
+		Button importButton = new Button("Import");
+		importButton.setId("popup-button");
+		
+		importButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				Database.setReportScores(teamNames, reportScores, tournamentFile);
+				popupStage.hide();
+				try {
+					Database.updateQualsWorkbook(tournamentFile);
+				} catch (IOException e1) {
+					//TODO Show error message
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		buttonBox.getChildren().addAll(cancelButton, importButton);
+		
+		root.getChildren().add(buttonBox);
+		
+		Scene s = new Scene(root);
+		s.getStylesheets().add("tournament-view.css");
+		popupStage = new Stage();
+		popupStage.setScene(s);
+		popupStage.initOwner(primaryStage);
+		popupStage.initModality(Modality.WINDOW_MODAL);
+		popupStage.show();
 	}
 	
 	public void loadQualsSchedule() {
@@ -497,7 +615,7 @@ public class TournamentView {
 	
 	// TODO Show string error
 	public void save(int[][] schedule, String[] uniqueScoreFields, String[] repeatScoreFields, int match) {
-		int lineAmt = 3 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + match;
+		int lineAmt = 4 + 1 + (uniqueScoreFields.length + repeatScoreFields.length)*2 + 1 + teamAmt + 1 + match;
 		
 		String lineVal = "";
 		for(int i = 0;i < schedule[match].length;i++)

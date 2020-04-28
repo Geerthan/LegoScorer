@@ -58,10 +58,7 @@ public class CreateGameMenu {
 		
 		root.getChildren().add(topStack);
 		
-		HBox formFields = new HBox();
-		formFields.setAlignment(Pos.CENTER); //TODO move to css
-		formFields.setSpacing(25);
-		formFields.setPadding(new Insets(15, 0, 0, 0));
+		// General game info fields (name, team amount, match time, and report weightings)
 		
 		HBox nameFields = new HBox();
 		nameFields.setAlignment(Pos.CENTER);
@@ -89,8 +86,35 @@ public class CreateGameMenu {
 		
 		matchTimeFields.getChildren().addAll(matchTimeLabel, matchTimeField);
 		
-		formFields.getChildren().addAll(nameFields, teamAmtFields, matchTimeFields);
-		root.getChildren().add(formFields);
+		HBox reportFields = new HBox();
+		reportFields.setAlignment(Pos.CENTER);
+		
+		Label reportLabel = new Label("Report Weighting: ");
+		Spinner<Double> reportSpinner = new Spinner<Double>(0, 50, 1, 0.5);
+		
+		reportFields.getChildren().addAll(reportLabel, reportSpinner);
+		
+		// General game info field formatting boxes (Two HBoxes in one VBox)
+		
+		VBox generalFormVB = new VBox();
+		generalFormVB.setAlignment(Pos.CENTER);
+		generalFormVB.setPadding(new Insets(15, 0, 0, 0));
+		generalFormVB.setSpacing(5);
+		
+		HBox generalFormHB1 = new HBox();
+		generalFormHB1.setAlignment(Pos.CENTER);
+		generalFormHB1.setSpacing(25);
+		generalFormHB1.getChildren().addAll(nameFields, teamAmtFields);
+		
+		HBox generalFormHB2 = new HBox();
+		generalFormHB2.setAlignment(Pos.CENTER);
+		generalFormHB2.setSpacing(25);
+		generalFormHB2.getChildren().addAll(matchTimeFields, reportFields);
+		
+		generalFormVB.getChildren().addAll(generalFormHB1, generalFormHB2);
+		root.getChildren().add(generalFormVB);
+		
+		// Scoring field info form pane
 		
 		GridPane formPane = new GridPane();
 		formPane.setPadding(new Insets(0, 20, 10, 20));
@@ -153,7 +177,6 @@ public class CreateGameMenu {
 		ListView<HBox> uniqueScoreLV = new ListView<HBox>();
 		uniqueScoreLV.setPrefHeight(250);
 		uniqueScoreLV.setFocusTraversable(false);
-		//TODO find proper selection removal
 		uniqueScoreLV.selectionModelProperty().addListener((observable, oldValue, newValue) -> {
 			uniqueScoreLV.getSelectionModel().clearSelection();
 		});
@@ -161,7 +184,6 @@ public class CreateGameMenu {
 		ListView<HBox> repeatScoreLV = new ListView<HBox>();
 		repeatScoreLV.setPrefHeight(250);
 		repeatScoreLV.setFocusTraversable(false);
-		//TODO find proper selection removal
 		repeatScoreLV.selectionModelProperty().addListener((observable, oldValue, newValue) -> {
 			repeatScoreLV.getSelectionModel().clearSelection();
 		});
@@ -293,6 +315,7 @@ public class CreateGameMenu {
 				String gameName = nameTextField.getText();
 				int teamAmt = teamAmtSpinner.getValue();
 				int timeAmt = matchTimeField.getValue();
+				double reportWeight = reportSpinner.getValue();
 				
 				String[] uniqueScoreStrs = new String[uniqueScoreLV.getItems().size()];
 				double[] uniqueScorePtVals = new double[uniqueScoreLV.getItems().size()];
@@ -314,7 +337,7 @@ public class CreateGameMenu {
 				
 				Database.createGameFolder(os);
 				
-				String errorStr = Database.createGameType(gameName, teamAmt, timeAmt, 
+				String errorStr = Database.createGameType(gameName, teamAmt, timeAmt, reportWeight,
 						uniqueScoreStrs, uniqueScorePtVals, repeatScoreStrs, repeatScorePtVals, os);
 				
 				if(errorStr != "") {

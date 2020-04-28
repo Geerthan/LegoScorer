@@ -152,23 +152,23 @@ public class Database {
 			writer = new BufferedWriter(new FileWriter(tournamentFile));
 			
 			//File format: Start with modified game file, then team list, then tournament data
-			writer.write(gameFileStr.get(0) + "\n" + gameFileStr.get(1) + "\n" + gameFileStr.get(2) + "\n");
+			writer.write(gameFileStr.get(0) + "\n" + gameFileStr.get(1) + "\n" + gameFileStr.get(2) + "\n" + gameFileStr.get(3) + "\n");
 			
 			//Amount of scoring fields
-			writer.write(gameFileStr.size()/2-1 + "\n");
+			writer.write((gameFileStr.size()-1)/2-1 + "\n");
 			
 			//Each scoring field
-			for(int i = 3;i < gameFileStr.size();i++) {
+			for(int i = 4;i < gameFileStr.size();i++) {
 				writer.write(gameFileStr.get(i) + "\n");
 			}
 			
 			//Amount of teams
 			writer.write(teams.size() + "\n");
 			
-			//Each team name
+			//Each team name, with a 0 in front for report score
 			for(int i = 0;i < teams.size();i++)
 				if(!teams.get(i).isBlank())
-					writer.write(teams.get(i) + "\n");
+					writer.write("0 " + teams.get(i) + "\n");
 			
 			//Amount of matches
 			writer.write(schedule.length + "\n");
@@ -244,7 +244,7 @@ public class Database {
 			BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 			
 			//Skip game data
-			for(int i = 0;i < 3;i++)
+			for(int i = 0;i < 4;i++)
 				in.readLine();
 			
 			//Get amt of scoring fields
@@ -367,7 +367,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip scoring elements
@@ -402,7 +402,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip scoring elements
@@ -440,7 +440,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip scoring elements
@@ -480,7 +480,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Ignore game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int lines = Integer.valueOf(in.readLine());
@@ -511,7 +511,7 @@ public class Database {
 		int teamsPerMatch = getTeamsPerMatch(tournamentFile);
 		
 		int[][] scoreVals = new int[teamAmt][uniqueFieldAmt+repeatFieldAmt];
-		int lineNum = 3 + 1 + (uniqueFieldAmt + repeatFieldAmt)*2 + 1 + teamAmt + 1 + match;
+		int lineNum = 4 + 1 + (uniqueFieldAmt + repeatFieldAmt)*2 + 1 + teamAmt + 1 + match;
 		String line = lines.get(lineNum);
 		
 		String[] tokens = line.split(" ");
@@ -542,7 +542,7 @@ public class Database {
 		int[][] schedule = new int[matchCnt[rnd]][teamCnt[rnd]];
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip game field info
@@ -595,7 +595,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip game fields
@@ -654,12 +654,14 @@ public class Database {
 		double[] uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
 		double[] repeatScorePtVals = getRepeatScorePtVals(tournamentFile);
 		int teamAmt = getTournamentTeamAmt(tournamentFile);
+		double reportWeight = getTournamentReportWeight(tournamentFile);
+		double[] reportScores = getTournamentReportScores(tournamentFile);
 		double[] teamScores = new double[teamAmt];
 		double curScore;
 		int[][] scoreVals;
 		
 		for(int i = 0;i < teamAmt;i++)
-			teamScores[i] = 0;
+			teamScores[i] = reportScores[i] * reportWeight;
 		
 		for(int i = 0;i < schedule.length;i++) {
 			scoreVals = getPlayoffsScoreVals(tournamentFile, uniqueScorePtVals.length + repeatScorePtVals.length, rnd, i);
@@ -686,12 +688,14 @@ public class Database {
 		double[] uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
 		double[] repeatScorePtVals = getRepeatScorePtVals(tournamentFile);
 		int teamAmt = getTournamentTeamAmt(tournamentFile);
+		double reportWeight = getTournamentReportWeight(tournamentFile);
+		double[] reportScores = getTournamentReportScores(tournamentFile);
 		double[] teamScores = new double[teamAmt];
 		double curScore;
 		int[][] scoreVals;
 		
 		for(int i = 0;i < teamAmt;i++)
-			teamScores[i] = 0;
+			teamScores[i] = reportScores[i] * reportWeight;
 		
 		for(int i = 0;i < schedule.length;i++) {
 			scoreVals = getScoreVals(tournamentFile, uniqueScorePtVals.length, repeatScorePtVals.length, teamAmt, i);
@@ -718,7 +722,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		//Skip game field data
@@ -764,7 +768,7 @@ public class Database {
 		
 	}
 
-	public static String createGameType(String gameName, int teamAmt, int timeAmt, 
+	public static String createGameType(String gameName, int teamAmt, int timeAmt, double reportWeight,
 			String[] uniqueScoreStrs, double[] uniqueScorePtVals, String[] repeatScoreStrs, double[] repeatScorePtVals, String os) {
 		
 		File gameFile;
@@ -789,6 +793,7 @@ public class Database {
 			writer.write(gameName + "\n");
 			writer.write(teamAmt + "\n");
 			writer.write(timeAmt + "\n");
+			writer.write(reportWeight + "\n");
 			
 			//Use two lines for each scoring field, one for name and one for points
 			//Unique scoring elements start with "u "
@@ -819,6 +824,38 @@ public class Database {
 		
 	}
 	
+	public static String[] getCSVReportTeamNames(File csvFile) throws IOException {
+		ArrayList<String> teamNames = new ArrayList<String>();
+		BufferedReader in = new BufferedReader(new FileReader(csvFile));
+		String str;
+		String[] tokens;
+		
+		while((str = in.readLine()) != null) {
+			tokens = str.split(",");
+			teamNames.add(tokens[1]);
+		}
+		in.close();
+		
+		return teamNames.toArray(new String[teamNames.size()]);
+	}
+	
+	public static double[] getCSVReportScores(File csvFile) throws IOException {
+		ArrayList<Double> reportScoreList = new ArrayList<Double>();
+		BufferedReader in = new BufferedReader(new FileReader(csvFile));
+		String str;
+		String[] tokens;
+		
+		while((str = in.readLine()) != null) {
+			tokens = str.split(",");
+			reportScoreList.add(Double.valueOf(tokens[0]));
+		}
+		in.close();
+		
+		// Convert ArrayList of Double to double[]
+		return reportScoreList.stream().mapToDouble(d -> d).toArray();
+	}
+	
+	// TODO: Switch naming to make it clear that this is NOT for tournament files, but for CSV imports
 	public static ArrayList<String> getTeams(File file) throws IOException {
 		
 		ArrayList<String> teams = new ArrayList<String>();
@@ -900,6 +937,20 @@ public class Database {
 			return Integer.valueOf(str);
 		}
 		
+	}
+	
+	public static boolean hasReports(File tournamentFile) throws IOException {
+		double reportWeight = getTournamentReportWeight(tournamentFile);
+		return reportWeight > 0;
+	}
+	
+	public static double getTournamentReportWeight(File tournamentFile) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		for(int i = 0;i < 3;i++)
+			in.readLine();
+		double reportWeight = Double.valueOf(in.readLine());
+		in.close();
+		return reportWeight;
 	}
 	
 	public static int[][] createSchedule(File gameFile, File teamFile, int teamMatchCount) throws IOException {
@@ -1069,7 +1120,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int fieldAmt = Integer.valueOf(in.readLine());
@@ -1096,7 +1147,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int fields = Integer.valueOf(in.readLine());
@@ -1126,7 +1177,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int fields = Integer.valueOf(in.readLine());
@@ -1156,7 +1207,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int fields = Integer.valueOf(in.readLine());
@@ -1187,7 +1238,7 @@ public class Database {
 		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
 		
 		//Skip game data
-		for(int i = 0;i < 3;i++)
+		for(int i = 0;i < 4;i++)
 			in.readLine();
 		
 		int fields = Integer.valueOf(in.readLine());
@@ -1214,6 +1265,90 @@ public class Database {
 		return repeatScorePtVals;
 	}
 	
+	public static String[] getTournamentTeamNames(File tournamentFile) throws IOException {
+		int num;
+		String[] teamNames;
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 4;i++)
+			in.readLine();
+		num = Integer.valueOf(in.readLine());
+		for(int i = 0;i < num;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Team amount
+		num = Integer.valueOf(in.readLine());
+		teamNames = new String[num];
+		for(int i = 0;i < num;i++) {
+			String[] tokens = in.readLine().split(" ");
+			teamNames[i] = tokens[1];
+			for(int j = 2;j < tokens.length;j++) {
+				teamNames[i] += " " + tokens[j];
+			}
+		}
+		
+		in.close();
+		return teamNames;
+	}
+	
+	public static double[] getTournamentReportScores(File tournamentFile) throws IOException {
+		int num;
+		double[] reportScores;
+		BufferedReader in = new BufferedReader(new FileReader(tournamentFile));
+		
+		//Skip game data
+		for(int i = 0;i < 4;i++)
+			in.readLine();
+		num = Integer.valueOf(in.readLine());
+		for(int i = 0;i < num;i++) {
+			in.readLine();
+			in.readLine();
+		}
+		
+		//Team amount
+		num = Integer.valueOf(in.readLine());
+		reportScores = new double[num];
+		for(int i = 0;i < num;i++) {
+			String[] tokens = in.readLine().split(" ");
+			reportScores[i] = Double.valueOf(tokens[0]);
+		}
+		
+		in.close();
+		return reportScores;
+	}
+	
+	//TODO: Handle error message
+	public static String setReportScores(String[] newTeamNames, double[] newReportScores, File tournamentFile) {
+		String[] actualTeamNames;
+		double[] actualReportScores;
+		double[] uniqueScorePtVals, repeatScorePtVals;
+		try {
+			actualTeamNames = getTournamentTeamNames(tournamentFile);
+			actualReportScores = getTournamentReportScores(tournamentFile);
+			uniqueScorePtVals = getUniqueScorePtVals(tournamentFile);
+			repeatScorePtVals = getRepeatScorePtVals(tournamentFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "ERROR: " + e.toString();
+		}
+		
+		for(int i = 0;i < newTeamNames.length;i++) {
+			for(int j = 0;j < actualTeamNames.length;j++) {
+				if(newTeamNames[i].equals(actualTeamNames[j]))
+					actualReportScores[j] = newReportScores[i];
+			}
+		}
+		
+		int startLine = 5 + (2*(uniqueScorePtVals.length+repeatScorePtVals.length)) + 1;
+		for(int i = 0;i < actualTeamNames.length;i++) {
+			replaceFileLine(tournamentFile, startLine+i, "" + actualReportScores[i] + " " + actualTeamNames[i]);
+		}
+		return "";
+	}
+	
 	public static int[][] getSchedule(File tournamentFile) throws IOException {
 		
 		int[][] errorSched = new int[0][0], schedule;
@@ -1237,6 +1372,12 @@ public class Database {
 		teamsPerMatch = Integer.valueOf(str);
 		
 		//Skip time per match
+		if(in.readLine() == null) {
+			in.close();
+			return errorSched;
+		}
+		
+		//Skip report weight
 		if(in.readLine() == null) {
 			in.close();
 			return errorSched;
@@ -1333,6 +1474,7 @@ public class Database {
 		}
 		
 		// Quals Scoring
+		double[] reportScores = getTournamentReportScores(tournamentFile);
 		String[] uniqueScoreFields = getUniqueScoreFields(tournamentFile);
 		String[] repeatScoreFields = getRepeatScoreFields(tournamentFile);
 		int teamAmt = getTournamentTeamAmt(tournamentFile);
@@ -1349,16 +1491,20 @@ public class Database {
 		c = r.createCell(0);
 		c.setCellValue("Team");
 		
+		c = r.createCell(1);
+		c.setCellValue("Report");
+		
 		for(int i = 0;i < uniqueScoreFields.length;i++) {
-			c = r.createCell(i+1);
+			c = r.createCell(i+2);
 			c.setCellValue(uniqueScoreFields[i]);
 		}
 		
 		for(int i = 0;i < repeatScoreFields.length;i++) {
-			c = r.createCell(i + 1 + uniqueScoreFields.length);
+			c = r.createCell(i + 2 + uniqueScoreFields.length);
 			c.setCellValue(repeatScoreFields[i]);
 		}
 		
+		// Create a table holding the total score per scoring field of each team
 		for(int i = 0;i < schedule.length;i++) {
 			scoreVals = getScoreVals(tournamentFile, uniqueScoreFields.length, repeatScoreFields.length, teamAmt, i);
 			for(int j = 1;j < schedule[i].length;j++) {
@@ -1372,8 +1518,13 @@ public class Database {
 			r = scoreSheet.createRow(i+1);
 			c = r.createCell(0);
 			c.setCellValue(i+1);
+			
+			// Report score cell
+			c = r.createCell(1);
+			c.setCellValue(reportScores[i]);
+			
 			for(int j = 0;j < uniqueScoreFields.length+repeatScoreFields.length;j++) {
-				c = r.createCell(j+1);
+				c = r.createCell(j+2);
 				c.setCellValue(scoreTable[i][j]);
 			}
 		}
